@@ -50,7 +50,7 @@ Tunggu hingga semua package terinstall.
 ### 5. Jalankan Aplikasi Flask
 
 ```bash
-python app.py
+
 ```
 
 Anda akan melihat output seperti:

@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 import time
 import sys
+import csv
+from io import StringIO, BytesIO
 
 # Konfigurasi aplikasi Flask
 app = Flask(__name__)
@@ -194,6 +196,84 @@ def range_test():
             })
     
     return render_template('range_test.html')
+
+@app.route('/export-range-csv', methods=['POST'])
+def export_range_csv():
+    """Export range test data sebagai CSV"""
+    try:
+        # Ambil input dari form (sama seperti range_test)
+        basis = int(request.form.get('basis', 2))
+        start_exp = int(request.form.get('start_exp', 10))
+        end_exp = int(request.form.get('end_exp', 2000))
+        step_exp = int(request.form.get('step_exp', 50))
+        
+        # Validasi input
+        if start_exp >= end_exp or step_exp <= 0:
+            return jsonify({'success': False, 'error': 'Input tidak valid'}), 400
+        
+        # Data collection
+        data_points = []
+        input_sizes = list(range(start_exp, end_exp + 1, step_exp))
+        
+        for exp in input_sizes:
+            # Ukur Iteratif
+            res_iter, t_iter = measure_time(pangkatIteratif, basis, exp)
+            
+            # Ukur Rekursif
+            if exp > 5000:
+                res_rec = None
+                t_rec = None
+            else:
+                try:
+                    res_rec, t_rec = measure_time(pangkatRekursif, basis, exp)
+                except RecursionError:
+                    res_rec = None
+                    t_rec = None
+            
+            data_points.append({
+                'input_size': exp,
+                'time_iter': round(t_iter, 6),
+                'time_rec': round(t_rec, 6) if t_rec is not None else None,
+                'result': str(res_iter)
+            })
+        
+        # Buat CSV content sebagai string
+        csv_string = StringIO()
+        writer = csv.writer(csv_string)
+        
+        # Header
+        writer.writerow(['Input Size (Pangkat)', 'Iteratif (ms)', 'Rekursif (ms)', 'Hasil'])
+        
+        # Data rows
+        for point in data_points:
+            writer.writerow([
+                point['input_size'],
+                point['time_iter'],
+                point['time_rec'] if point['time_rec'] is not None else 'N/A',
+                point['result']
+            ])
+        
+        # Convert string to bytes
+        csv_bytes = BytesIO(csv_string.getvalue().encode('utf-8-sig'))
+        
+        # Generate filename dengan timestamp
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'range_analysis_{timestamp}.csv'
+        
+        # Return file
+        return send_file(
+            csv_bytes,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        import traceback
+        print("Error in export_range_csv:")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================================================
 # ERROR HANDLERS

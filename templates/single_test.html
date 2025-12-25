@@ -65,6 +65,30 @@
             <div id="validationStatus"></div>
         </section>
 
+        <!-- Result Display -->
+        <section class="content-section glass-card result-display slide-up">
+            <div class="section-icon">
+                <i class="fas fa-equals"></i>
+            </div>
+            <h3 class="section-title">Hasil Perhitungan</h3>
+            
+            <div class="result-grid">
+                <div class="result-item">
+                    <h4>Basis</h4>
+                    <p id="inputBasis" class="result-value">-</p>
+                </div>
+                <div class="result-item">
+                    <h4>Pangkat</h4>
+                    <p id="inputPangkat" class="result-value">-</p>
+                </div>
+                <div class="result-item full-width">
+                    <h4>Hasil (Basis<sup>Pangkat</sup>)</h4>
+                    <p id="resultValue" class="result-value large">-</p>
+                    <small class="result-info" id="resultInfo"></small>
+                </div>
+            </div>
+        </section>
+
         <!-- Metrics Cards -->
         <section class="metrics-section slide-up">
             <div class="metrics-grid">
@@ -177,6 +201,22 @@ document.getElementById('singleTestForm').addEventListener('submit', async funct
                 data.time_rec ? data.time_rec.toFixed(6) + ' ms' : 'Error';
             document.getElementById('iterativeTime').textContent = 
                 data.time_iter.toFixed(6) + ' ms';
+            
+            // Update input values
+            const basis = parseInt(document.getElementById('basis').value);
+            const pangkat = parseInt(document.getElementById('pangkat').value);
+            document.getElementById('inputBasis').textContent = basis;
+            document.getElementById('inputPangkat').textContent = pangkat;
+            
+            // Display result
+            document.getElementById('resultValue').textContent = data.result_iter;
+            if (data.result_iter.includes('...')) {
+                document.getElementById('resultInfo').textContent = 
+                    `Nilai terlalu besar untuk ditampilkan, menampilkan 100 karakter pertama`;
+            } else {
+                document.getElementById('resultInfo').textContent = 
+                    `${data.result_iter.length} digit`;
+            }
             
             if (data.time_rec) {
                 const delta = data.time_iter - data.time_rec;

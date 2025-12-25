@@ -136,6 +136,7 @@
                             <th>Input Size (Pangkat)</th>
                             <th>Iteratif (ms)</th>
                             <th>Rekursif (ms)</th>
+                            <th>Hasil (Ringkas)</th>
                         </tr>
                     </thead>
                     <tbody id="dataTableBody">
@@ -366,6 +367,7 @@ function populateDataTable(dataPoints) {
             <td>${point.input_size}</td>
             <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
             <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
+            <td class="result-cell" title="${point.result}">${point.result}</td>
         `;
         tbody.appendChild(row);
     });

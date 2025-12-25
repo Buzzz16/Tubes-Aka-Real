@@ -142,21 +142,29 @@ def range_test():
             
             for exp in input_sizes:
                 # Ukur Iteratif
-                _, t_iter = measure_time(pangkatIteratif, basis, exp)
+                res_iter, t_iter = measure_time(pangkatIteratif, basis, exp)
                 
                 # Ukur Rekursif (Skip jika terlalu besar untuk mencegah crash)
                 if exp > 5000:
+                    res_rec = None
                     t_rec = None 
                 else:
                     try:
-                        _, t_rec = measure_time(pangkatRekursif, basis, exp)
+                        res_rec, t_rec = measure_time(pangkatRekursif, basis, exp)
                     except RecursionError:
+                        res_rec = None
                         t_rec = None
+                
+                # Format hasil untuk tampilan (ringkas jika terlalu besar)
+                result_display = str(res_iter)
+                if len(str(res_iter)) > 50:
+                    result_display = f"{str(res_iter)[:47]}..."
                 
                 data_points.append({
                     'input_size': exp,
                     'time_iter': round(t_iter, 6),
-                    'time_rec': round(t_rec, 6) if t_rec is not None else None
+                    'time_rec': round(t_rec, 6) if t_rec is not None else None,
+                    'result': result_display
                 })
             
             # Hitung rata-rata

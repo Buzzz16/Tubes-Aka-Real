@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Analisis Kompleksitas Algoritma{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar glass-morphism" id="navbar">
+        <div class="container nav-container">
+            <div class="nav-brand fade-in">
+                <i class="fas fa-chart-line brand-icon"></i>
+                <span class="brand-text">Analisis Algoritma</span>
+            </div>
+            
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item fade-in" style="animation-delay: 0.1s">
+                    <a href="{{ url_for('theory') }}" class="nav-link {% if request.endpoint == 'theory' %}active{% endif %}">
+                        <i class="fas fa-book"></i>
+                        <span>Teori</span>
+                    </a>
+                </li>
+                <li class="nav-item fade-in" style="animation-delay: 0.2s">
+                    <a href="{{ url_for('single_test') }}" class="nav-link {% if request.endpoint == 'single_test' %}active{% endif %}">
+                        <i class="fas fa-bolt"></i>
+                        <span>Single Test</span>
+                    </a>
+                </li>
+                <li class="nav-item fade-in" style="animation-delay: 0.3s">
+                    <a href="{{ url_for('range_test') }}" class="nav-link {% if request.endpoint == 'range_test' %}active{% endif %}">
+                        <i class="fas fa-chart-area"></i>
+                        <span>Range & Graph</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer glass-morphism">
+        <div class="container">
+            <p class="footer-text">
+                <i class="fas fa-graduation-cap"></i>
+                Tugas Besar Analisis Kompleksitas Algoritma | Babass - Gathfann © 2025
+            </p>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <p class="loading-text">Memproses...</p>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

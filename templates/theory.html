@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Teori Algoritma - Analisis Kompleksitas{% endblock %}
+
+{% block content %}
+<div class="theory-page">
+    <!-- Hero Section -->
+    <section class="hero-section fade-in">
+        <div class="hero-content">
+            <h1 class="page-title">
+                <i class="fas fa-book-open"></i>
+                Teori Kompleksitas Algoritma
+            </h1>
+            <p class="page-subtitle">
+                Studi Kasus: Bilangan Eksponen (Base<sup>Exp</sup>)
+            </p>
+        </div>
+    </section>
+
+    <!-- Introduction -->
+    <section class="content-section glass-card slide-up" style="animation-delay: 0.2s">
+        <div class="section-icon">
+            <i class="fas fa-lightbulb"></i>
+        </div>
+        <h2 class="section-title">Pengantar</h2>
+        <p class="section-text">
+            Dalam ilmu komputer, terdapat berbagai cara untuk menyelesaikan masalah yang sama. 
+            Proyek ini membandingkan dua pendekatan untuk menghitung pangkat:
+            <strong>Algoritma Iteratif</strong> dan <strong>Algoritma Rekursif</strong>.
+        </p>
+    </section>
+
+    <!-- Algoritma Iteratif -->
+    <section class="content-section glass-card slide-up" style="animation-delay: 0.3s">
+        <div class="section-icon iterative-icon">
+            <i class="fas fa-repeat"></i>
+        </div>
+        <h2 class="section-title">1. Algoritma Iteratif</h2>
+        
+        <div class="algorithm-details">
+            <div class="detail-item">
+                <h3><i class="fas fa-brain"></i> Konsep</h3>
+                <p>Menggunakan perulangan (<code>for loop</code>) untuk mengalikan basis sebanyak <em>n</em> kali.</p>
+            </div>
+            
+            <div class="detail-item">
+                <h3><i class="fas fa-clock"></i> Kompleksitas Waktu (Time Complexity)</h3>
+                <p><strong>O(n)</strong> - Linear. Waktu eksekusi bertambah secara proporsional dengan besarnya pangkat.</p>
+            </div>
+            
+            <div class="detail-item">
+                <h3><i class="fas fa-memory"></i> Kompleksitas Ruang (Space Complexity)</h3>
+                <p><strong>O(1)</strong> - Konstan. Hanya membutuhkan memori untuk menyimpan variabel hasil.</p>
+            </div>
+        </div>
+
+        <div class="code-showcase">
+            <h4><i class="fas fa-code"></i> Implementasi Kode</h4>
+            <div class="code-block">
+                <pre><code>def pangkatIteratif(basis, pangkat):
+    result = 1
+    for i in range(pangkat):
+        result *= basis
+    return result</code></pre>
+            </div>
+        </div>
+
+        <div class="pseudocode-showcase">
+            <h4><i class="fas fa-file-code"></i> Pseudocode</h4>
+            <div class="pseudocode-block">
+                <pre><code>Function pangkatIteratif(basis, pangkat):
+    result ← 1
+    For i from 0 to pangkat - 1:
+        result ← result × basis
+    Return result</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Algoritma Rekursif -->
+    <section class="content-section glass-card slide-up" style="animation-delay: 0.4s">
+        <div class="section-icon recursive-icon">
+            <i class="fas fa-project-diagram"></i>
+        </div>
+        <h2 class="section-title">2. Algoritma Rekursif</h2>
+        
+        <div class="algorithm-details">
+            <div class="detail-item">
+                <h3><i class="fas fa-brain"></i> Konsep</h3>
+                <p>Fungsi memanggil dirinya sendiri dengan masalah yang lebih kecil (<em>n-1</em>) hingga mencapai basis (<em>n=0</em>).</p>
+            </div>
+            
+            <div class="detail-item">
+                <h3><i class="fas fa-clock"></i> Kompleksitas Waktu</h3>
+                <p><strong>O(n)</strong> - Linear. Melakukan <em>n</em> kali pemanggilan fungsi.</p>
+            </div>
+            
+            <div class="detail-item">
+                <h3><i class="fas fa-memory"></i> Kompleksitas Ruang</h3>
+                <p><strong>O(n)</strong> - Linear. Membutuhkan stack memory untuk menyimpan setiap pemanggilan fungsi (Call Stack).</p>
+            </div>
+        </div>
+
+        <div class="code-showcase">
+            <h4><i class="fas fa-code"></i> Implementasi Kode</h4>
+            <div class="code-block">
+                <pre><code>def pangkatRekursif(basis, pangkat):
+    if pangkat == 0:
+        return 1    
+    return basis * pangkatRekursif(basis, pangkat - 1)</code></pre>
+            </div>
+        </div>
+
+        <div class="pseudocode-showcase">
+            <h4><i class="fas fa-file-code"></i> Pseudocode</h4>
+            <div class="pseudocode-block">
+                <pre><code>Function pangkatRekursif(basis, pangkat):
+    If pangkat = 0:
+        Return 1
+    Return basis × pangkatRekursif(basis, pangkat - 1)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recursion Overhead -->
+    <section class="content-section glass-card warning-card slide-up" style="animation-delay: 0.5s">
+        <div class="section-icon warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2 class="section-title">Isu Recursion Overhead</h2>
+        
+        <p class="section-text">
+            Meskipun kedua algoritma memiliki Time Complexity <strong>O(n)</strong>, secara praktis 
+            <strong>Iteratif seringkali lebih cepat</strong> daripada Rekursif. 
+            Hal ini disebabkan oleh <strong>Overhead</strong> pada Rekursif, yaitu biaya sistem untuk:
+        </p>
+        
+        <ul class="overhead-list">
+            <li>
+                <i class="fas fa-layer-group"></i>
+                <span>Membuat stack frame baru untuk setiap pemanggilan fungsi</span>
+            </li>
+            <li>
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Menyimpan alamat kembali (return address)</span>
+            </li>
+            <li>
+                <i class="fas fa-database"></i>
+                <span>Menyimpan parameter lokal di memory stack</span>
+            </li>
+        </ul>
+
+        <div class="conclusion-box">
+            <i class="fas fa-chart-line"></i>
+            <p>Untuk membuktikan perbedaan performa ini, silakan lakukan pengujian pada halaman 
+            <a href="{{ url_for('single_test') }}">Single Test</a> atau 
+            <a href="{{ url_for('range_test') }}">Range & Graph Analysis</a>.</p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section fade-in" style="animation-delay: 0.6s">
+        <h3><i class="fas fa-flask"></i> Siap Melakukan Pengujian?</h3>
+        <div class="cta-buttons">
+            <a href="{{ url_for('single_test') }}" class="cta-btn primary-btn">
+                <i class="fas fa-bolt"></i>
+                Mulai Single Test
+            </a>
+            <a href="{{ url_for('range_test') }}" class="cta-btn secondary-btn">
+                <i class="fas fa-chart-area"></i>
+                Analisis Range & Graph
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Single Test - Analisis Algoritma{% endblock %}
+
+{% block content %}
+<div class="single-test-page">
+    <!-- Hero Section -->
+    <section class="hero-section fade-in">
+        <div class="hero-content">
+            <h1 class="page-title">
+                <i class="fas fa-bolt"></i>
+                Single Input Analysis
+            </h1>
+            <p class="page-subtitle">
+                Uji performa untuk satu kali perhitungan pangkat
+            </p>
+        </div>
+    </section>
+
+    <!-- Input Form -->
+    <section class="content-section glass-card slide-up" style="animation-delay: 0.2s">
+        <div class="section-icon">
+            <i class="fas fa-keyboard"></i>
+        </div>
+        <h2 class="section-title">Input Parameter</h2>
+        
+        <form id="singleTestForm" class="test-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="basis">
+                        <i class="fas fa-square-root-alt"></i>
+                        Basis
+                    </label>
+                    <input type="number" id="basis" name="basis" value="2" required class="form-input">
+                    <small class="form-hint">Bilangan bulat (bisa positif/negatif)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="pangkat">
+                        <i class="fas fa-superscript"></i>
+                        Pangkat
+                    </label>
+                    <input type="number" id="pangkat" name="pangkat" value="900" min="0" required class="form-input">
+                    <small class="form-hint">Bilangan bulat ≥ 0</small>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-play-circle"></i>
+                <span>Mulai Analisis</span>
+            </button>
+        </form>
+    </section>
+
+    <!-- Warning Alert -->
+    <div id="warningAlert" class="alert-box warning-alert" style="display: none;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="warningText"></span>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" style="display: none;">
+        <!-- Validation Status -->
+        <section class="content-section glass-card slide-up">
+            <div id="validationStatus"></div>
+        </section>
+
+        <!-- Metrics Cards -->
+        <section class="metrics-section slide-up">
+            <div class="metrics-grid">
+                <div class="metric-card glass-card recursive-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <h3 class="metric-title">Rekursif</h3>
+                    <div class="metric-value" id="recursiveTime">-- ms</div>
+                    <div class="metric-label">Waktu Eksekusi</div>
+                </div>
+                
+                <div class="metric-card glass-card iterative-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-repeat"></i>
+                    </div>
+                    <h3 class="metric-title">Iteratif</h3>
+                    <div class="metric-value" id="iterativeTime">-- ms</div>
+                    <div class="metric-label">Waktu Eksekusi</div>
+                    <div class="metric-delta" id="timeDelta"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section class="content-section glass-card conclusion-section slide-up">
+            <div class="section-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <h3 class="section-title">Kesimpulan</h3>
+            <p class="conclusion-text" id="conclusionText"></p>
+        </section>
+
+        <!-- Chart Section -->
+        <section class="content-section glass-card chart-section slide-up">
+            <div class="section-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h3 class="section-title">Visualisasi Perbandingan</h3>
+            <div class="chart-container">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let comparisonChart = null;
+
+document.getElementById('singleTestForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Show loading
+    document.getElementById('loadingOverlay').classList.add('active');
+    
+    // Hide previous results
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('warningAlert').style.display = 'none';
+    
+    // Get form data
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('{{ url_for("single_test") }}', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        // Hide loading
+        document.getElementById('loadingOverlay').classList.remove('active');
+        
+        if (data.success) {
+            // Show warning if exists
+            if (data.warning) {
+                document.getElementById('warningAlert').style.display = 'flex';
+                document.getElementById('warningText').textContent = data.warning;
+            }
+            
+            // Show validation status
+            const validationStatus = document.getElementById('validationStatus');
+            if (data.recursion_error) {
+                validationStatus.innerHTML = `
+                    <div class="status-box error-status">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Rekursif mengalami RecursionError! Stack limit terlampaui.</span>
+                    </div>
+                `;
+            } else if (data.valid) {
+                validationStatus.innerHTML = `
+                    <div class="status-box success-status">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Hasil perhitungan kedua algoritma valid dan identik.</span>
+                    </div>
+                `;
+            } else {
+                validationStatus.innerHTML = `
+                    <div class="status-box error-status">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Terjadi ketidakcocokan hasil!</span>
+                    </div>
+                `;
+            }
+            
+            // Update metrics
+            document.getElementById('recursiveTime').textContent = 
+                data.time_rec ? data.time_rec.toFixed(6) + ' ms' : 'Error';
+            document.getElementById('iterativeTime').textContent = 
+                data.time_iter.toFixed(6) + ' ms';
+            
+            if (data.time_rec) {
+                const delta = data.time_iter - data.time_rec;
+                const deltaEl = document.getElementById('timeDelta');
+                deltaEl.textContent = (delta > 0 ? '+' : '') + delta.toFixed(6) + ' ms';
+                deltaEl.className = 'metric-delta ' + (delta > 0 ? 'positive' : 'negative');
+            }
+            
+            // Update conclusion
+            document.getElementById('conclusionText').textContent = data.conclusion;
+            
+            // Create chart
+            createComparisonChart(data.time_rec || 0, data.time_iter);
+            
+            // Show results with animation
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            setTimeout(() => {
+                resultsSection.querySelectorAll('.slide-up').forEach((el, index) => {
+                    el.style.animationDelay = (index * 0.1) + 's';
+                    el.classList.add('animated');
+                });
+            }, 100);
+            
+        } else {
+            alert('Error: ' + data.error);
+        }
+        
+    } catch (error) {
+        document.getElementById('loadingOverlay').classList.remove('active');
+        alert('Terjadi kesalahan: ' + error.message);
+    }
+});
+
+function createComparisonChart(timeRec, timeIter) {
+    const ctx = document.getElementById('comparisonChart');
+    
+    if (comparisonChart) {
+        comparisonChart.destroy();
+    }
+    
+    comparisonChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Rekursif', 'Iteratif'],
+            datasets: [{
+                label: 'Waktu Eksekusi (ms)',
+                data: [timeRec, timeIter],
+                backgroundColor: [
+                    'rgba(139, 92, 246, 0.7)',
+                    'rgba(34, 197, 94, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(139, 92, 246, 1)',
+                    'rgba(34, 197, 94, 1)'
+                ],
+                borderWidth: 2,
+                borderRadius: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    padding: 12,
+                    titleColor: '#1E293B',
+                    bodyColor: '#475569',
+                    borderColor: 'rgba(59, 130, 246, 0.3)',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(6) + ' ms';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.1)'
+                    },
+                    ticks: {
+                        color: '#94A3B8',
+                        callback: function(value) {
+                            return value.toFixed(2) + ' ms';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#CBD5E1',
+                        font: {
+                            size: 14,
+                            weight: '600'
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

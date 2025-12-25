@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}Range Analysis - Analisis Algoritma{% endblock %}
+
+{% block content %}
+<div class="range-test-page">
+    <!-- Hero Section -->
+    <section class="hero-section fade-in">
+        <div class="hero-content">
+            <h1 class="page-title">
+                <i class="fas fa-chart-area"></i>
+                Range & Graph Analysis
+            </h1>
+            <p class="page-subtitle">
+                Analisis tren pertumbuhan waktu eksekusi terhadap besarnya input
+            </p>
+        </div>
+    </section>
+
+    <!-- Input Form -->
+    <section class="content-section glass-card slide-up" style="animation-delay: 0.2s">
+        <div class="section-icon">
+            <i class="fas fa-sliders-h"></i>
+        </div>
+        <h2 class="section-title">Konfigurasi Range Input</h2>
+        
+        <form id="rangeTestForm" class="test-form">
+            <div class="form-grid four-col">
+                <div class="form-group">
+                    <label for="basis">
+                        <i class="fas fa-square-root-alt"></i>
+                        Basis
+                    </label>
+                    <input type="number" id="basis" name="basis" value="2" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="start_exp">
+                        <i class="fas fa-play"></i>
+                        Start Pangkat
+                    </label>
+                    <input type="number" id="start_exp" name="start_exp" value="10" min="0" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="end_exp">
+                        <i class="fas fa-stop"></i>
+                        End Pangkat
+                    </label>
+                    <input type="number" id="end_exp" name="end_exp" value="2000" min="0" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="step_exp">
+                        <i class="fas fa-arrows-alt-h"></i>
+                        Interval (Step)
+                    </label>
+                    <input type="number" id="step_exp" name="step_exp" value="50" min="1" required class="form-input">
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-chart-line"></i>
+                <span>Generate Grafik & Analisis</span>
+            </button>
+        </form>
+    </section>
+
+    <!-- Progress Bar -->
+    <div id="progressSection" class="progress-section" style="display: none;">
+        <div class="glass-card progress-card">
+            <h3><i class="fas fa-spinner fa-spin"></i> Memproses Data...</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">0%</p>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" style="display: none;">
+        <!-- Chart Section -->
+        <section class="content-section glass-card chart-section slide-up">
+            <div class="section-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3 class="section-title">1. Visualisasi Perbandingan (Line Chart)</h3>
+            <div class="chart-container large">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="metrics-section slide-up">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <h3 class="section-title">2. Kesimpulan Analisis</h3>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card glass-card iterative-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-repeat"></i>
+                    </div>
+                    <h4 class="metric-title">Rata-rata Iteratif</h4>
+                    <div class="metric-value" id="avgIterative">-- ms</div>
+                </div>
+                
+                <div class="metric-card glass-card recursive-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <h4 class="metric-title">Rata-rata Rekursif</h4>
+                    <div class="metric-value" id="avgRecursive">-- ms</div>
+                </div>
+            </div>
+            
+            <div class="conclusion-box glass-card">
+                <i class="fas fa-lightbulb"></i>
+                <p id="rangeConclusion"></p>
+            </div>
+        </section>
+
+        <!-- Data Table Section -->
+        <section class="content-section glass-card table-section slide-up">
+            <div class="section-icon">
+                <i class="fas fa-table"></i>
+            </div>
+            <h3 class="section-title">3. Data Mentah</h3>
+            <div class="table-container">
+                <table id="dataTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Input Size (Pangkat)</th>
+                            <th>Iteratif (ms)</th>
+                            <th>Rekursif (ms)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let trendChart = null;
+
+document.getElementById('rangeTestForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Validate inputs
+    const startExp = parseInt(document.getElementById('start_exp').value);
+    const endExp = parseInt(document.getElementById('end_exp').value);
+    const stepExp = parseInt(document.getElementById('step_exp').value);
+    
+    if (startExp >= endExp) {
+        alert('End Pangkat harus lebih besar dari Start Pangkat');
+        return;
+    }
+    
+    if (stepExp <= 0) {
+        alert('Interval harus lebih besar dari 0');
+        return;
+    }
+    
+    // Show progress section
+    document.getElementById('progressSection').style.display = 'block';
+    document.getElementById('resultsSection').style.display = 'none';
+    
+    // Simulate progress (since we can't get real-time updates from Flask easily)
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += 2;
+        if (progress <= 90) {
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = progress + '%';
+        }
+    }, 100);
+    
+    // Get form data
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('{{ url_for("range_test") }}', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        // Complete progress
+        clearInterval(progressInterval);
+        document.getElementById('progressFill').style.width = '100%';
+        document.getElementById('progressText').textContent = '100%';
+        
+        setTimeout(() => {
+            document.getElementById('progressSection').style.display = 'none';
+        }, 500);
+        
+        if (data.success) {
+            // Update statistics
+            document.getElementById('avgIterative').textContent = 
+                data.avg_iter.toFixed(6) + ' ms';
+            document.getElementById('avgRecursive').textContent = 
+                data.avg_rec ? data.avg_rec.toFixed(6) + ' ms' : 'N/A';
+            document.getElementById('rangeConclusion').textContent = data.conclusion;
+            
+            // Create chart
+            createTrendChart(data.data_points);
+            
+            // Populate table
+            populateDataTable(data.data_points);
+            
+            // Show results with animation
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            setTimeout(() => {
+                resultsSection.querySelectorAll('.slide-up').forEach((el, index) => {
+                    el.style.animationDelay = (index * 0.1) + 's';
+                    el.classList.add('animated');
+                });
+            }, 100);
+            
+        } else {
+            alert('Error: ' + data.error);
+        }
+        
+    } catch (error) {
+        clearInterval(progressInterval);
+        document.getElementById('progressSection').style.display = 'none';
+        alert('Terjadi kesalahan: ' + error.message);
+    }
+});
+
+function createTrendChart(dataPoints) {
+    const ctx = document.getElementById('trendChart');
+    
+    if (trendChart) {
+        trendChart.destroy();
+    }
+    
+    const labels = dataPoints.map(d => d.input_size);
+    const iterativeData = dataPoints.map(d => d.time_iter);
+    const recursiveData = dataPoints.map(d => d.time_rec);
+    
+    trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Iteratif',
+                    data: iterativeData,
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgba(34, 197, 94, 1)'
+                },
+                {
+                    label: 'Rekursif',
+                    data: recursiveData,
+                    borderColor: 'rgba(139, 92, 246, 1)',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgba(139, 92, 246, 1)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#CBD5E1',
+                        font: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    padding: 12,
+                    titleColor: '#1E293B',
+                    bodyColor: '#475569',
+                    borderColor: 'rgba(59, 130, 246, 0.3)',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toFixed(6) + ' ms';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.1)'
+                    },
+                    ticks: {
+                        color: '#94A3B8',
+                        callback: function(value) {
+                            return value.toFixed(2) + ' ms';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.05)'
+                    },
+                    ticks: {
+                        color: '#94A3B8',
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                }
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+}
+
+function populateDataTable(dataPoints) {
+    const tbody = document.getElementById('dataTableBody');
+    tbody.innerHTML = '';
+    
+    dataPoints.forEach((point, index) => {
+        const row = document.createElement('tr');
+        row.style.animationDelay = (index * 0.02) + 's';
+        row.innerHTML = `
+            <td>${point.input_size}</td>
+            <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
+            <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+</script>
+{% endblock %}

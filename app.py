@@ -203,6 +203,9 @@ def internal_error(error):
 # MAIN
 # ============================================================================
 
+# For Vercel serverless
+# Export app untuk Vercel
+# Jika running locally, jalankan dengan flask run atau python app.py
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))

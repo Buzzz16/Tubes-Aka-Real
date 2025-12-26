@@ -3,6 +3,66 @@
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    // ========================================================================
+    // DARK MODE TOGGLE
+    // ========================================================================
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeIcon = document.getElementById('darkModeIcon');
+    
+    // Check for saved preference or system preference
+    function initDarkMode() {
+        const savedMode = localStorage.getItem('darkMode');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedMode === 'enabled' || (savedMode === null && prefersDark)) {
+            document.body.classList.add('dark-mode');
+            updateDarkModeIcon(true);
+        } else {
+            updateDarkModeIcon(false);
+        }
+    }
+    
+    function updateDarkModeIcon(isDark) {
+        if (darkModeIcon) {
+            darkModeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+    }
+    
+    function toggleDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+        updateDarkModeIcon(isDark);
+        
+        // Update navbar colors for dark mode
+        updateNavbarForDarkMode();
+    }
+    
+    function updateNavbarForDarkMode() {
+        const navbar = document.getElementById('navbar');
+        const isDark = document.body.classList.contains('dark-mode');
+        const currentScroll = window.pageYOffset;
+        
+        if (isDark) {
+            navbar.style.background = currentScroll > 50 
+                ? 'rgba(15, 23, 42, 0.95)' 
+                : 'rgba(15, 23, 42, 0.9)';
+        } else {
+            navbar.style.background = currentScroll > 50 
+                ? 'rgba(255, 255, 255, 0.95)' 
+                : 'rgba(255, 255, 255, 0.8)';
+        }
+    }
+    
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
+    
+    // Initialize dark mode on load
+    initDarkMode();
+    
+    // ========================================================================
+    // MOBILE NAVIGATION TOGGLE
+    // ========================================================================
     // Mobile Navigation Toggle
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
@@ -10,18 +70,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', function() {
             navMenu.classList.toggle('active');
-            
-            // Animate hamburger icon
-            const spans = navToggle.querySelectorAll('span');
-            if (navMenu.classList.contains('active')) {
-                spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-                spans[1].style.opacity = '0';
-                spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
-            } else {
-                spans[0].style.transform = 'none';
-                spans[1].style.opacity = '1';
-                spans[2].style.transform = 'none';
+            navToggle.classList.toggle('active');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                navMenu.classList.remove('active');
+                navToggle.classList.remove('active');
             }
+        });
+        
+        // Close menu when clicking a nav link
+        const navLinks = navMenu.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                navMenu.classList.remove('active');
+                navToggle.classList.remove('active');
+            });
         });
     }
     
@@ -31,12 +97,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.addEventListener('scroll', function() {
         const currentScroll = window.pageYOffset;
+        const isDark = document.body.classList.contains('dark-mode');
         
         if (currentScroll > 50) {
-            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+            navbar.style.background = isDark 
+                ? 'rgba(15, 23, 42, 0.95)' 
+                : 'rgba(255, 255, 255, 0.95)';
             navbar.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.15)';
         } else {
-            navbar.style.background = 'rgba(255, 255, 255, 0.8)';
+            navbar.style.background = isDark 
+                ? 'rgba(15, 23, 42, 0.9)' 
+                : 'rgba(255, 255, 255, 0.8)';
             navbar.style.boxShadow = '0 8px 32px rgba(59, 130, 246, 0.1)';
         }
         

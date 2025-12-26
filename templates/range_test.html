@@ -112,7 +112,12 @@
             <div class="section-icon">
                 <i class="fas fa-chart-line"></i>
             </div>
-            <h3 class="section-title">1. Visualisasi Perbandingan (Line Chart)</h3>
+            <div class="section-header-with-actions">
+                <h3 class="section-title">1. Visualisasi Perbandingan (Line Chart)</h3>
+                <button type="button" class="export-btn small" onclick="downloadChart('trendChart', 'bacteria-growth-chart')" title="Download Chart as PNG">
+                    <i class="fas fa-image"></i>
+                </button>
+            </div>
             <div class="chart-container large">
                 <canvas id="trendChart"></canvas>
             </div>
@@ -156,7 +161,12 @@
             <div class="section-icon">
                 <i class="fas fa-table"></i>
             </div>
-            <h3 class="section-title">3. Data Mentah</h3>
+            <div class="section-header-with-actions">
+                <h3 class="section-title">3. Data Mentah</h3>
+                <button type="button" class="export-btn small" onclick="exportCSV()" title="Download Data as CSV">
+                    <i class="fas fa-file-csv"></i>
+                </button>
+            </div>
             <div class="table-container">
                 <table id="dataTable" class="data-table">
                     <thead>
@@ -287,6 +297,9 @@ document.getElementById('rangeTestForm').addEventListener('submit', async functi
             document.getElementById('avgRecursive').textContent = 
                 data.avg_rec ? data.avg_rec.toFixed(6) + ' ms' : 'N/A';
             document.getElementById('rangeConclusion').textContent = data.conclusion;
+            
+            // Store data for CSV export
+            latestDataPoints = data.data_points;
             
             // Create chart
             createTrendChart(data.data_points);
@@ -462,6 +475,62 @@ function populateDataTable(dataPoints) {
         
         tbody.appendChild(row);
     });
+}
+
+// Store latest data for CSV export
+let latestDataPoints = [];
+
+// Download Chart as PNG
+function downloadChart(chartId, filename) {
+    const chart = Chart.getChart(chartId);
+    if (!chart) {
+        alert('Chart tidak ditemukan');
+        return;
+    }
+    
+    // Create a temporary canvas with white background
+    const canvas = chart.canvas;
+    const ctx = canvas.getContext('2d');
+    
+    // Get the chart as base64 image
+    const link = document.createElement('a');
+    link.download = filename + '_' + new Date().toISOString().slice(0, 10) + '.png';
+    link.href = chart.toBase64Image('image/png', 1.0);
+    link.click();
+}
+
+// Export CSV
+function exportCSV() {
+    if (!latestDataPoints || latestDataPoints.length === 0) {
+        alert('Tidak ada data untuk di-export. Silakan generate analisis terlebih dahulu.');
+        return;
+    }
+    
+    const tipeValue = document.getElementById('tipe_pertumbuhan').value;
+    const hideDurasi = (tipeValue === '4');
+    
+    // Build CSV content
+    let csvContent = '';
+    
+    if (hideDurasi) {
+        csvContent = 'Kejadian,Iteratif (ms),Rekursif (ms),Populasi Bakteri\n';
+        latestDataPoints.forEach(point => {
+            csvContent += `${point.kejadian},${point.time_iter.toFixed(6)},${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'},"${point.result}"\n`;
+        });
+    } else {
+        csvContent = 'Durasi,Kejadian,Iteratif (ms),Rekursif (ms),Populasi Bakteri\n';
+        latestDataPoints.forEach(point => {
+            csvContent += `${point.durasi},${point.kejadian},${point.time_iter.toFixed(6)},${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'},"${point.result}"\n`;
+        });
+    }
+    
+    // Create download link
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'bacteria_growth_analysis_' + new Date().toISOString().slice(0, 10) + '.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
 }
 </script>
 {% endblock %}

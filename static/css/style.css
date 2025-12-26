@@ -959,13 +959,17 @@ body.dark-mode .export-btn {
 }
 
 /* Flex span helpers (used by Multiple Test layout) */
-.form-group.span-2 {
-    flex: 1 1 calc(50% - var(--spacing-md));
+.form-group.span-2,
+.form-grid.four-col > .form-group.span-2 {
+    flex: 0 0 calc(50% - var(--spacing-md));
+    max-width: calc(50% - var(--spacing-md));
     min-width: 280px;
 }
 
-.form-group.span-4 {
-    flex: 1 1 100%;
+.form-group.span-4,
+.form-grid.four-col > .form-group.span-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
 }
 
 .form-group label {
@@ -1011,6 +1015,7 @@ body.dark-mode .export-btn {
 }
 
 .form-hint {
+    display: block;
     font-size: 0.78rem;
     color: var(--text-muted);
     font-style: italic;

@@ -17,7 +17,7 @@
 
 <br/>
 
-> *"Aplikasi ini dikembangkan sebagai tugas kuliah Analisis Kompleksitas Algoritma. Kami mengubah kalkulator pangkat sederhana menjadi simulasi ilmiah pertumbuhan bakteri tercepat di dunia untuk memvisualisasikan perbedaan Big-O Notation secara nyata."*
+> *"Aplikasi ini dikembangkan sebagai tugas kuliah Analisis Kompleksitas Algoritma. Kami membuat aplikasi simulasi ilmiah pertumbuhan bakteri tercepat di dunia untuk memvisualisasikan perbedaan Big-O Notation pada algoritma Iteratif dan Rekursif secara nyata."*
 
 </div>
 
@@ -104,9 +104,12 @@ Aplikasi ini membandingkan dua pendekatan untuk menghitung $2^n$:
 
 Kami menggunakan stack teknologi modern untuk memastikan performa dan estetika:
 
-- **Backend**: `Python 3`, `Flask` (Microframework yang cepat)
-- **Frontend**: `HTML5`, `CSS3` (Flexbox, CSS Variables), `JavaScript`
-- **Library**: `Chart.js` (Visualisasi Data), `Gunicorn` (Production Server)
+| Komponen | Teknologi | Deskripsi |
+|----------|-----------|-----------|
+| **Backend** | Python + Flask | Logic algoritma & Server |
+| **Frontend** | HTML5 + CSS3 | Glassmorphism UI |
+| **Visualisasi** | Chart.js | Rendering grafik interaktif |
+| **Styling** | CSS Variables | Dark mode & Theming |
 
 ---
 
@@ -137,8 +140,8 @@ Hanya butuh 3 langkah untuk menjalankan di lokal:
 
 <br/>
 
-**Dibuat dengan 💚 dan ☕ oleh Mahasiswa Informatika**
-*Untuk Penilaian Dosen - Semester Genap 2025*
+
+*Untuk Dosen AKA Ibu Lidya  - oleh Babass & Ghatfan*
 
 <br/>
 

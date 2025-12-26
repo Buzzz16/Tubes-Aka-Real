@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Teori Algoritma - Analisis Kompleksitas{% endblock %}
+{% block title %}Teori Algoritma - Pertumbuhan Bakteri{% endblock %}
 
 {% block content %}
 <div class="theory-page">
@@ -8,11 +8,11 @@
     <section class="hero-section fade-in">
         <div class="hero-content">
             <h1 class="page-title">
-                <i class="fas fa-book-open"></i>
-                Teori Kompleksitas Algoritma
+                <i class="fas fa-bacterium"></i>
+                Analisis Perbandingan Efisiensi Algoritma
             </h1>
             <p class="page-subtitle">
-                Studi Kasus: Bilangan Eksponen (Base<sup>Exp</sup>)
+                Iteratif vs Rekursif dalam Perhitungan Pertumbuhan Bakteri <em>Vibrio natriegens</em>
             </p>
         </div>
     </section>
@@ -20,14 +20,62 @@
     <!-- Introduction -->
     <section class="content-section glass-card slide-up" style="animation-delay: 0.2s">
         <div class="section-icon">
-            <i class="fas fa-lightbulb"></i>
+            <i class="fas fa-dna"></i>
         </div>
-        <h2 class="section-title">Pengantar</h2>
+        <h2 class="section-title">
+            <span id="pengantar-link" style="position: relative; display: inline-block; cursor: pointer;">
+                <a href="https://drive.google.com/file/d/1x1UWcG6DRj9a-TNoSI5w9spEaIyVOa_x/view?usp=sharing" target="_blank" style="color: inherit; text-decoration: none;">Pengantar</a>
+                <div id="fancy-tooltip" style="display: none;">
+                    <div class="tooltip-content">
+                        <i class="fas fa-book-open"></i>
+                        <span>View Journal Source</span>
+                        <div class="tooltip-arrow"></div>
+                    </div>
+                </div>
+            </span>
+        </h2>
         <p class="section-text">
-            Dalam ilmu komputer, terdapat berbagai cara untuk menyelesaikan masalah yang sama. 
-            Proyek ini membandingkan dua pendekatan untuk menghitung pangkat:
+            <strong>Vibrio natriegens</strong> merupakan bakteri laut yang memiliki tingkat pertumbuhan tercepat di dunia, 
+            dengan waktu generasi sekitar <strong>10 menit</strong> dalam kondisi optimal. Bakteri ini berkembang biak 
+            melalui pembelahan biner (binary fission), di mana satu sel membelah menjadi dua sel identik, mengikuti 
+            pola pertumbuhan <strong>eksponensial</strong>.
+        </p>
+        <p class="section-text">
+            Proyek ini menganalisis efisiensi dua pendekatan algoritma dalam memprediksi populasi bakteri:
             <strong>Algoritma Iteratif</strong> dan <strong>Algoritma Rekursif</strong>.
         </p>
+    </section>
+
+    <!-- Bacterial Growth Concept -->
+    <section class="content-section glass-card slide-up" style="animation-delay: 0.25s">
+        <div class="section-icon bacterial-icon">
+            <i class="fas fa-microscope"></i>
+        </div>
+        <h2 class="section-title">Konsep Pertumbuhan Eksponensial Bakteri</h2>
+        
+        <div class="algorithm-details">
+            <div class="detail-item">
+                <h3><i class="fas fa-flask"></i> Pembelahan Biner (Binary Fission)</h3>
+                <p>Setiap bakteri membelah menjadi 2 bakteri baru setiap periode waktu tertentu. Populasi akan menjadi 2<sup>x</sup> kali lipat dari populasi awal, di mana <em>x</em> adalah jumlah kejadian pembelahan.</p>
+            </div>
+            
+            <div class="detail-item">
+                <h3><i class="fas fa-chart-line"></i> Formula Pertumbuhan</h3>
+                <p><strong>N(t) = N<sub>0</sub> × 2<sup>x</sup></strong></p>
+                <p style="margin-top: 0.5rem; font-size: 0.95rem;">
+                    Di mana:<br>
+                    • N(t) = Populasi pada waktu t<br>
+                    • N<sub>0</sub> = Populasi awal<br>
+                    • x = Jumlah kejadian pembelahan (durasi / laju pertumbuhan)
+                </p>
+            </div>
+            
+            <div class="detail-item">
+                <h3><i class="fas fa-clock"></i> Karakteristik <em>Vibrio natriegens</em></h3>
+                <p>Waktu generasi: <strong>~10 menit</strong> (kondisi optimal, 37°C, media LB)</p>
+                <p>Artinya: 100 bakteri akan menjadi 200 dalam 10 menit, 400 dalam 20 menit, dan seterusnya secara eksponensial.</p>
+            </div>
+        </div>
     </section>
 
     <!-- Algoritma Iteratif -->
@@ -40,12 +88,12 @@
         <div class="algorithm-details">
             <div class="detail-item">
                 <h3><i class="fas fa-brain"></i> Konsep</h3>
-                <p>Menggunakan perulangan (<code>for loop</code>) untuk mengalikan basis sebanyak <em>n</em> kali.</p>
+                <p>Menggunakan perulangan (<code>for loop</code>) untuk mengalikan populasi dengan 2 sebanyak <em>x</em> kali kejadian pembelahan.</p>
             </div>
             
             <div class="detail-item">
                 <h3><i class="fas fa-clock"></i> Kompleksitas Waktu (Time Complexity)</h3>
-                <p><strong>O(n)</strong> - Linear. Waktu eksekusi bertambah secara proporsional dengan besarnya pangkat.</p>
+                <p><strong>O(x)</strong> - Linear. Waktu eksekusi bertambah secara proporsional dengan jumlah kejadian pembelahan.</p>
             </div>
             
             <div class="detail-item">
@@ -57,22 +105,22 @@
         <div class="code-showcase">
             <h4><i class="fas fa-code"></i> Implementasi Kode</h4>
             <div class="code-block">
-                <pre><code>def pangkatIteratif(basis, pangkat):
-    result = 1
-    for i in range(pangkat):
-        result *= basis
-    return result</code></pre>
+                <pre><code>def bakteri_iteratif(n0, x):
+    hasil = n0
+    for i in range(x):
+        hasil *= 2
+    return hasil</code></pre>
             </div>
         </div>
 
         <div class="pseudocode-showcase">
             <h4><i class="fas fa-file-code"></i> Pseudocode</h4>
             <div class="pseudocode-block">
-                <pre><code>Function pangkatIteratif(basis, pangkat):
-    result ← 1
-    For i from 0 to pangkat - 1:
-        result ← result × basis
-    Return result</code></pre>
+                <pre><code>Function bakteri_iteratif(n0, x):
+    hasil ← n0
+    For i from 0 to x - 1:
+        hasil ← hasil × 2
+    Return hasil</code></pre>
             </div>
         </div>
     </section>
@@ -87,37 +135,38 @@
         <div class="algorithm-details">
             <div class="detail-item">
                 <h3><i class="fas fa-brain"></i> Konsep</h3>
-                <p>Fungsi memanggil dirinya sendiri dengan masalah yang lebih kecil (<em>n-1</em>) hingga mencapai basis (<em>n=0</em>).</p>
+                <p>Fungsi memanggil dirinya sendiri dengan jumlah kejadian yang lebih kecil (<em>x-1</em>) hingga mencapai basis (<em>x ≤ 0</em>).</p>
             </div>
             
             <div class="detail-item">
                 <h3><i class="fas fa-clock"></i> Kompleksitas Waktu</h3>
-                <p><strong>O(n)</strong> - Linear. Melakukan <em>n</em> kali pemanggilan fungsi.</p>
+                <p><strong>O(x)</strong> - Linear. Melakukan <em>x</em> kali pemanggilan fungsi untuk menghitung hasil.</p>
             </div>
             
             <div class="detail-item">
                 <h3><i class="fas fa-memory"></i> Kompleksitas Ruang</h3>
-                <p><strong>O(n)</strong> - Linear. Membutuhkan stack memory untuk menyimpan setiap pemanggilan fungsi (Call Stack).</p>
+                <p><strong>O(x)</strong> - Linear. Membutuhkan stack memory untuk menyimpan setiap pemanggilan fungsi (Call Stack).</p>
             </div>
         </div>
 
         <div class="code-showcase">
             <h4><i class="fas fa-code"></i> Implementasi Kode</h4>
             <div class="code-block">
-                <pre><code>def pangkatRekursif(basis, pangkat):
-    if pangkat == 0:
-        return 1    
-    return basis * pangkatRekursif(basis, pangkat - 1)</code></pre>
+                <pre><code>def bakteri_rekursif(n0, x):
+    if x <= 0:
+        return n0
+    else:
+        return 2 * bakteri_rekursif(n0, x - 1)</code></pre>
             </div>
         </div>
 
         <div class="pseudocode-showcase">
             <h4><i class="fas fa-file-code"></i> Pseudocode</h4>
             <div class="pseudocode-block">
-                <pre><code>Function pangkatRekursif(basis, pangkat):
-    If pangkat = 0:
-        Return 1
-    Return basis × pangkatRekursif(basis, pangkat - 1)</code></pre>
+                <pre><code>Function bakteri_rekursif(n0, x):
+    If x ≤ 0:
+        Return n0
+    Return 2 × bakteri_rekursif(n0, x - 1)</code></pre>
             </div>
         </div>
     </section>
@@ -130,8 +179,8 @@
         <h2 class="section-title">Isu Recursion Overhead</h2>
         
         <p class="section-text">
-            Meskipun kedua algoritma memiliki Time Complexity <strong>O(n)</strong>, secara praktis 
-            <strong>Iteratif seringkali lebih cepat</strong> daripada Rekursif. 
+            Meskipun kedua algoritma memiliki Time Complexity <strong>O(x)</strong>, secara praktis 
+            <strong>Iteratif seringkali lebih cepat</strong> daripada Rekursif dalam memprediksi populasi bakteri. 
             Hal ini disebabkan oleh <strong>Overhead</strong> pada Rekursif, yaitu biaya sistem untuk:
         </p>
         
@@ -152,25 +201,251 @@
 
         <div class="conclusion-box">
             <i class="fas fa-chart-line"></i>
-            <p>Untuk membuktikan perbedaan performa ini, silakan lakukan pengujian pada halaman 
+            <p>Untuk membuktikan perbedaan performa ini dalam konteks perhitungan pertumbuhan bakteri <em>Vibrio natriegens</em>, 
+            silakan lakukan pengujian pada halaman 
             <a href="{{ url_for('single_test') }}">Single Test</a> atau 
-            <a href="{{ url_for('range_test') }}">Range & Graph Analysis</a>.</p>
+            <a href="{{ url_for('range_test') }}">Multiple Test</a>.</p>
         </div>
     </section>
 
     <!-- CTA Section -->
     <section class="cta-section fade-in" style="animation-delay: 0.6s">
-        <h3><i class="fas fa-flask"></i> Siap Melakukan Pengujian?</h3>
+        <h3><i class="fas fa-flask"></i> Siap Melakukan Pengujian Pertumbuhan Bakteri?</h3>
         <div class="cta-buttons">
             <a href="{{ url_for('single_test') }}" class="cta-btn primary-btn">
-                <i class="fas fa-bolt"></i>
+                <i class="fas fa-bacterium"></i>
                 Mulai Single Test
             </a>
             <a href="{{ url_for('range_test') }}" class="cta-btn secondary-btn">
-                <i class="fas fa-chart-area"></i>
-                Analisis Range & Graph
+                <i class="fas fa-vials"></i>
+                Multiple Test
             </a>
         </div>
     </section>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Fancy Tooltip Styles */
+#fancy-tooltip {
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: block !important;
+}
+
+#fancy-tooltip.show {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+    display: block !important;
+    animation: tooltipBounce 0.6s ease-out, tooltipGlow 1.5s ease-in-out infinite;
+}
+
+.tooltip-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.6), 0 0 20px rgba(118, 75, 162, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+    position: relative;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.5px;
+}
+
+.tooltip-content i {
+    font-size: 22px;
+    animation: iconPulse 1s ease-in-out infinite;
+    color: #FFD700;
+}
+
+.tooltip-content span {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-arrow {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid #764ba2;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Sparkle/Firecracker Particles */
+.sparkle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 999;
+}
+
+.sparkle::before {
+    content: '✨';
+    position: absolute;
+    font-size: 20px;
+    animation: sparkleFloat 0.8s ease-out forwards;
+}
+
+@keyframes tooltipBounce {
+    0% {
+        transform: translateX(-50%) scale(0) translateY(20px);
+        opacity: 0;
+    }
+    50% {
+        transform: translateX(-50%) scale(1.1) translateY(-5px);
+    }
+    100% {
+        transform: translateX(-50%) scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes tooltipGlow {
+    0%, 100% {
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.6), 0 0 20px rgba(118, 75, 162, 0.5);
+    }
+    50% {
+        box-shadow: 0 10px 60px rgba(102, 126, 234, 0.8), 0 0 40px rgba(118, 75, 162, 0.7), 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+@keyframes sparkleFloat {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg);
+        opacity: 0;
+    }
+}
+
+/* Hover effect on link */
+#pengantar-link a {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+#pengantar-link a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+}
+
+#pengantar-link:hover a::after {
+    width: 100%;
+}
+
+#pengantar-link:hover a {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Fancy tooltip with firecracker animation
+let hoverTimeout;
+const pengantarLink = document.getElementById('pengantar-link');
+const tooltip = document.getElementById('fancy-tooltip');
+
+function createSparkle(x, y) {
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    sparkle.style.left = x + 'px';
+    sparkle.style.top = y + 'px';
+    
+    // Random direction for sparkle
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 30 + Math.random() * 40;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    
+    sparkle.style.setProperty('--tx', tx + 'px');
+    sparkle.style.setProperty('--ty', ty + 'px');
+    
+    document.body.appendChild(sparkle);
+    
+    setTimeout(() => {
+        sparkle.remove();
+    }, 800);
+}
+
+function createFirecrackers(element) {
+    const rect = element.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Create multiple sparkles in a burst
+    for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+            createSparkle(centerX, centerY);
+        }, i * 30);
+    }
+}
+
+pengantarLink.addEventListener('mouseenter', function() {
+    clearTimeout(hoverTimeout);
+    hoverTimeout = setTimeout(() => {
+        tooltip.classList.add('show');
+        createFirecrackers(this);
+        
+        // Add extra sparkles periodically while hovering
+        const sparkleInterval = setInterval(() => {
+            if (tooltip.classList.contains('show')) {
+                const rect = pengantarLink.getBoundingClientRect();
+                const randomX = rect.left + Math.random() * rect.width;
+                const randomY = rect.top + Math.random() * rect.height;
+                createSparkle(randomX, randomY);
+            } else {
+                clearInterval(sparkleInterval);
+            }
+        }, 300);
+    }, 200); // 200ms delay (0.2 seconds)
+});
+
+pengantarLink.addEventListener('mouseleave', function() {
+    clearTimeout(hoverTimeout);
+    tooltip.classList.remove('show');
+});
+
+// Add click effect
+pengantarLink.addEventListener('click', function() {
+    createFirecrackers(this);
+    createFirecrackers(this);
+});
+</script>
 {% endblock %}

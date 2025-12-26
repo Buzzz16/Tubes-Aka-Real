@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Single Test - Analisis Algoritma{% endblock %}
+{% block title %}Single Test - Pertumbuhan Bakteri{% endblock %}
 
 {% block content %}
 <div class="single-test-page">
@@ -8,11 +8,11 @@
     <section class="hero-section fade-in">
         <div class="hero-content">
             <h1 class="page-title">
-                <i class="fas fa-bolt"></i>
+                <i class="fas fa-bacterium"></i>
                 Single Input Analysis
             </h1>
             <p class="page-subtitle">
-                Uji performa untuk satu kali perhitungan pangkat
+                Analisis pertumbuhan <em>Vibrio natriegens</em> untuk satu perhitungan
             </p>
         </div>
     </section>
@@ -22,32 +22,55 @@
         <div class="section-icon">
             <i class="fas fa-keyboard"></i>
         </div>
-        <h2 class="section-title">Input Parameter</h2>
+        <h2 class="section-title">Input Parameter Pertumbuhan Bakteri</h2>
         
         <form id="singleTestForm" class="test-form">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="basis">
-                        <i class="fas fa-square-root-alt"></i>
-                        Basis
+                    <label for="n0">
+                        <i class="fas fa-bacterium"></i>
+                        Jumlah Awal Bakteri (N₀)
                     </label>
-                    <input type="number" id="basis" name="basis" value="2" required class="form-input">
-                    <small class="form-hint">Bilangan bulat (bisa positif/negatif)</small>
+                    <input type="number" id="n0" name="n0" value="100" min="1" required class="form-input">
+                    <small class="form-hint">Populasi awal bakteri (bilangan bulat positif)</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="pangkat">
-                        <i class="fas fa-superscript"></i>
-                        Pangkat
+                    <label for="tipe_pertumbuhan">
+                        <i class="fas fa-dna"></i>
+                        Tipe Pertumbuhan Bakteri
                     </label>
-                    <input type="number" id="pangkat" name="pangkat" value="900" min="0" required class="form-input">
-                    <small class="form-hint">Bilangan bulat ≥ 0</small>
+                    <select id="tipe_pertumbuhan" name="tipe_pertumbuhan" class="form-input" required>
+                        <option value="1">Detik</option>
+                        <option value="2" selected>Menit</option>
+                        <option value="3">Jam</option>
+                        <option value="4">Jumlah Kejadian</option>
+                    </select>
+                    <small class="form-hint">Satuan waktu untuk durasi pertumbuhan</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="durasi">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span id="durasi_label">Nilai Durasi</span>
+                    </label>
+                    <input type="number" id="durasi" name="durasi" value="60" min="0" step="any" required class="form-input">
+                    <small class="form-hint" id="durasi_hint">Durasi pertumbuhan sesuai tipe yang dipilih</small>
+                </div>
+                
+                <div class="form-group" id="laju_group">
+                    <label for="laju_pertumbuhan">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Laju Pertumbuhan (menit)
+                    </label>
+                    <input type="number" id="laju_pertumbuhan" name="laju_pertumbuhan" value="10" min="0.1" step="any" class="form-input">
+                    <small class="form-hint">Waktu per pembelahan (default: 10 menit untuk <em>V. natriegens</em>)</small>
                 </div>
             </div>
             
             <button type="submit" class="submit-btn">
                 <i class="fas fa-play-circle"></i>
-                <span>Mulai Analisis</span>
+                <span>Mulai Analisis Pertumbuhan</span>
             </button>
         </form>
     </section>
@@ -68,21 +91,29 @@
         <!-- Result Display -->
         <section class="content-section glass-card result-display slide-up">
             <div class="section-icon">
-                <i class="fas fa-equals"></i>
+                <i class="fas fa-microscope"></i>
             </div>
-            <h3 class="section-title">Hasil Perhitungan</h3>
+            <h3 class="section-title">Hasil Perhitungan Populasi Bakteri</h3>
             
             <div class="result-grid">
                 <div class="result-item">
-                    <h4>Basis</h4>
-                    <p id="inputBasis" class="result-value">-</p>
+                    <h4>Populasi Awal (N₀)</h4>
+                    <p id="inputN0" class="result-value">-</p>
                 </div>
                 <div class="result-item">
-                    <h4>Pangkat</h4>
-                    <p id="inputPangkat" class="result-value">-</p>
+                    <h4>Durasi</h4>
+                    <p id="inputDurasi" class="result-value">-</p>
+                </div>
+                <div class="result-item">
+                    <h4>Laju Pertumbuhan</h4>
+                    <p id="inputLaju" class="result-value">-</p>
+                </div>
+                <div class="result-item">
+                    <h4>Jumlah Kejadian (x)</h4>
+                    <p id="inputKejadian" class="result-value">-</p>
                 </div>
                 <div class="result-item full-width">
-                    <h4>Hasil (Basis<sup>Pangkat</sup>)</h4>
+                    <h4>Populasi Akhir Bakteri</h4>
                     <p id="resultValue" class="result-value large">-</p>
                     <small class="result-info" id="resultInfo"></small>
                 </div>
@@ -139,6 +170,26 @@
 {% block extra_js %}
 <script>
 let comparisonChart = null;
+
+// Toggle laju_pertumbuhan visibility based on tipe_pertumbuhan
+document.getElementById('tipe_pertumbuhan').addEventListener('change', function() {
+    const lajuGroup = document.getElementById('laju_group');
+    const lajuInput = document.getElementById('laju_pertumbuhan');
+    const durasiLabel = document.getElementById('durasi_label');
+    const durasiHint = document.getElementById('durasi_hint');
+    
+    if (this.value === '4') { // Jumlah Kejadian
+        lajuGroup.style.display = 'none';
+        lajuInput.removeAttribute('required');
+        durasiLabel.textContent = 'Jumlah Kejadian';
+        durasiHint.textContent = 'Jumlah kejadian pembelahan bakteri';
+    } else {
+        lajuGroup.style.display = 'block';
+        lajuInput.setAttribute('required', 'required');
+        durasiLabel.textContent = 'Nilai Durasi';
+        durasiHint.textContent = 'Durasi pertumbuhan sesuai tipe yang dipilih';
+    }
+});
 
 document.getElementById('singleTestForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -203,13 +254,13 @@ document.getElementById('singleTestForm').addEventListener('submit', async funct
                 data.time_iter.toFixed(6) + ' ms';
             
             // Update input values
-            const basis = parseInt(document.getElementById('basis').value);
-            const pangkat = parseInt(document.getElementById('pangkat').value);
-            document.getElementById('inputBasis').textContent = basis;
-            document.getElementById('inputPangkat').textContent = pangkat;
+            document.getElementById('inputN0').textContent = data.input_data.n0 + ' bakteri';
+            document.getElementById('inputDurasi').textContent = data.input_data.durasi + ' ' + data.input_data.satuan;
+            document.getElementById('inputLaju').textContent = data.input_data.laju + ' menit';
+            document.getElementById('inputKejadian').textContent = data.input_data.kejadian + ' kali pembelahan';
             
             // Display result
-            document.getElementById('resultValue').textContent = data.result_iter;
+            document.getElementById('resultValue').textContent = data.result_iter + ' bakteri';
             if (data.result_iter.includes('...')) {
                 document.getElementById('resultInfo').textContent = 
                     `Nilai terlalu besar untuk ditampilkan, menampilkan 100 karakter pertama`;
@@ -267,11 +318,11 @@ function createComparisonChart(timeRec, timeIter) {
                 data: [timeRec, timeIter],
                 backgroundColor: [
                     'rgba(139, 92, 246, 0.7)',
-                    'rgba(34, 197, 94, 0.7)'
+                    'rgba(16, 185, 129, 0.7)'
                 ],
                 borderColor: [
                     'rgba(139, 92, 246, 1)',
-                    'rgba(34, 197, 94, 1)'
+                    'rgba(16, 185, 129, 1)'
                 ],
                 borderWidth: 2,
                 borderRadius: 10
@@ -289,7 +340,7 @@ function createComparisonChart(timeRec, timeIter) {
                     padding: 12,
                     titleColor: '#1E293B',
                     bodyColor: '#475569',
-                    borderColor: 'rgba(59, 130, 246, 0.3)',
+                    borderColor: 'rgba(16, 185, 129, 0.3)',
                     borderWidth: 1,
                     callbacks: {
                         label: function(context) {

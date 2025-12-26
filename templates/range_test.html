@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Range Analysis - Analisis Algoritma{% endblock %}
+{% block title %}Multiple Test - Pertumbuhan Bakteri{% endblock %}
 
 {% block content %}
 <div class="range-test-page">
@@ -8,11 +8,11 @@
     <section class="hero-section fade-in">
         <div class="hero-content">
             <h1 class="page-title">
-                <i class="fas fa-chart-area"></i>
-                Range & Graph Analysis
+                <i class="fas fa-vials"></i>
+                Multiple Test
             </h1>
             <p class="page-subtitle">
-                Analisis tren pertumbuhan waktu eksekusi terhadap besarnya input
+                Analisis tren pertumbuhan bakteri pada berbagai durasi waktu
             </p>
         </div>
     </section>
@@ -22,40 +22,67 @@
         <div class="section-icon">
             <i class="fas fa-sliders-h"></i>
         </div>
-        <h2 class="section-title">Konfigurasi Range Input</h2>
+        <h2 class="section-title">Konfigurasi Multiple Test Pertumbuhan Bakteri</h2>
         
         <form id="rangeTestForm" class="test-form">
             <div class="form-grid four-col">
                 <div class="form-group">
-                    <label for="basis">
-                        <i class="fas fa-square-root-alt"></i>
-                        Basis
+                    <label for="n0">
+                        <i class="fas fa-bacterium"></i>
+                        Jumlah Awal Bakteri (N₀)
                     </label>
-                    <input type="number" id="basis" name="basis" value="2" required class="form-input">
+                    <input type="number" id="n0" name="n0" value="100" min="1" required class="form-input">
+                    <small class="form-hint">Populasi awal bakteri</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="start_exp">
+                    <label for="tipe_pertumbuhan">
+                        <i class="fas fa-dna"></i>
+                        Tipe Pertumbuhan Bakteri
+                    </label>
+                    <select id="tipe_pertumbuhan" name="tipe_pertumbuhan" class="form-input" required>
+                        <option value="1">Detik</option>
+                        <option value="2" selected>Menit</option>
+                        <option value="3">Jam</option>
+                        <option value="4">Jumlah Kejadian</option>
+                    </select>
+                    <small class="form-hint">Satuan untuk nilai mulai dan akhir</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="start_value">
                         <i class="fas fa-play"></i>
-                        Start Pangkat
+                        <span id="start_label">Nilai Mulai Pertumbuhan</span>
                     </label>
-                    <input type="number" id="start_exp" name="start_exp" value="10" min="0" required class="form-input">
+                    <input type="number" id="start_value" name="start_value" value="10" min="0" step="any" required class="form-input">
+                    <small class="form-hint" id="start_hint">Nilai awal durasi pertumbuhan</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="end_exp">
+                    <label for="end_value">
                         <i class="fas fa-stop"></i>
-                        End Pangkat
+                        <span id="end_label">Nilai Akhir Pertumbuhan</span>
                     </label>
-                    <input type="number" id="end_exp" name="end_exp" value="2000" min="0" required class="form-input">
+                    <input type="number" id="end_value" name="end_value" value="100" min="0" step="any" required class="form-input">
+                    <small class="form-hint" id="end_hint">Nilai akhir durasi pertumbuhan</small>
                 </div>
-                
-                <div class="form-group">
-                    <label for="step_exp">
-                        <i class="fas fa-arrows-alt-h"></i>
-                        Interval (Step)
+
+                <div class="form-group span-2" id="laju_group">
+                    <label for="laju_pertumbuhan">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Laju Pertumbuhan (menit)
                     </label>
-                    <input type="number" id="step_exp" name="step_exp" value="50" min="1" required class="form-input">
+                    <input type="number" id="laju_pertumbuhan" name="laju_pertumbuhan" value="10" min="0.1" step="any" class="form-input">
+                    <small class="form-hint">Waktu per pembelahan (default: 10 menit)</small>
+                </div>
+
+                <div class="form-group span-2" id="interval_group">
+                    <label for="interval">
+                        <i class="fas fa-stream"></i>
+                        Interval Kejadian
+                    </label>
+                    <input type="number" id="interval" name="interval" value="2" min="1" step="1" required class="form-input">
+                    <small class="form-hint">Selisih antar kejadian pertumbuhan (contoh: interval 2 = kejadian 0, 2, 4, 6, ...)</small>
                 </div>
             </div>
             
@@ -69,7 +96,8 @@
     <!-- Progress Bar -->
     <div id="progressSection" class="progress-section" style="display: none;">
         <div class="glass-card progress-card">
-            <h3><i class="fas fa-spinner fa-spin"></i> Memproses Data...</h3>
+            <h3><i class="fas fa-spinner fa-spin"></i> Memproses Data Pertumbuhan Bakteri...</h3>
+            <p class="progress-info" id="progressInfo" style="margin: 0.5rem 0; color: #059669; font-size: 0.9rem;"></p>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
@@ -133,10 +161,11 @@
                 <table id="dataTable" class="data-table">
                     <thead>
                         <tr>
-                            <th>Input Size (Pangkat)</th>
+                            <th id="durasi_header">Durasi</th>
+                            <th>Kejadian (x)</th>
                             <th>Iteratif (ms)</th>
                             <th>Rekursif (ms)</th>
-                            <th>Hasil (Ringkas)</th>
+                            <th>Populasi Bakteri</th>
                         </tr>
                     </thead>
                     <tbody id="dataTableBody">
@@ -152,27 +181,74 @@
 <script>
 let trendChart = null;
 
+// Toggle laju_pertumbuhan visibility and durasi column based on tipe_pertumbuhan
+document.getElementById('tipe_pertumbuhan').addEventListener('change', function() {
+    const lajuGroup = document.getElementById('laju_group');
+    const lajuInput = document.getElementById('laju_pertumbuhan');
+    const intervalGroup = document.getElementById('interval_group');
+    const startLabel = document.getElementById('start_label');
+    const endLabel = document.getElementById('end_label');
+    const startHint = document.getElementById('start_hint');
+    const endHint = document.getElementById('end_hint');
+    const durasiHeader = document.getElementById('durasi_header');
+    
+    if (this.value === '4') { // Jumlah Kejadian
+        lajuGroup.style.display = 'none';
+        lajuInput.removeAttribute('required');
+        intervalGroup.classList.remove('span-2');
+        intervalGroup.classList.add('span-4');
+        startLabel.textContent = 'Kejadian Mulai';
+        endLabel.textContent = 'Kejadian Akhir';
+        startHint.textContent = 'Jumlah kejadian awal';
+        endHint.textContent = 'Jumlah kejadian akhir';
+        durasiHeader.style.display = 'none';
+    } else {
+        lajuGroup.style.display = 'block';
+        lajuInput.setAttribute('required', 'required');
+        intervalGroup.classList.remove('span-4');
+        intervalGroup.classList.add('span-2');
+        startLabel.textContent = 'Nilai Mulai Pertumbuhan';
+        endLabel.textContent = 'Nilai Akhir Pertumbuhan';
+        startHint.textContent = 'Nilai awal durasi pertumbuhan';
+        endHint.textContent = 'Nilai akhir durasi pertumbuhan';
+        durasiHeader.style.display = '';
+    }
+});
+
 document.getElementById('rangeTestForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     // Validate inputs
-    const startExp = parseInt(document.getElementById('start_exp').value);
-    const endExp = parseInt(document.getElementById('end_exp').value);
-    const stepExp = parseInt(document.getElementById('step_exp').value);
+    const startValue = parseFloat(document.getElementById('start_value').value);
+    const endValue = parseFloat(document.getElementById('end_value').value);
+    const interval = parseInt(document.getElementById('interval').value);
     
-    if (startExp >= endExp) {
-        alert('End Pangkat harus lebih besar dari Start Pangkat');
+    if (startValue >= endValue) {
+        alert('Nilai Akhir harus lebih besar dari Nilai Mulai');
         return;
     }
     
-    if (stepExp <= 0) {
+    if (interval <= 0) {
         alert('Interval harus lebih besar dari 0');
         return;
     }
     
-    // Show progress section
+    // Calculate estimated data points
+    const laju = parseFloat(document.getElementById('laju_pertumbuhan').value) || 10;
+    const tipe = document.getElementById('tipe_pertumbuhan').value;
+    let estimatedPoints;
+    if (tipe === '4') {
+        estimatedPoints = Math.floor((endValue - startValue) / interval) + 1;
+    } else {
+        const kejadianMulai = Math.floor((startValue * 60) / (laju * 60));
+        const kejadianAkhir = Math.floor((endValue * 60) / (laju * 60));
+        estimatedPoints = Math.floor((kejadianAkhir - kejadianMulai) / interval) + 1;
+    }
+    
+    // Show progress section with info
     document.getElementById('progressSection').style.display = 'block';
     document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('progressInfo').textContent = `Menghitung ${estimatedPoints} data points...`;
     
     // Simulate progress (since we can't get real-time updates from Flask easily)
     let progress = 0;
@@ -246,7 +322,7 @@ function createTrendChart(dataPoints) {
         trendChart.destroy();
     }
     
-    const labels = dataPoints.map(d => d.input_size);
+    const labels = dataPoints.map(d => `${d.durasi} (${d.kejadian}x)`);
     const iterativeData = dataPoints.map(d => d.time_iter);
     const recursiveData = dataPoints.map(d => d.time_rec);
     
@@ -360,15 +436,30 @@ function populateDataTable(dataPoints) {
     const tbody = document.getElementById('dataTableBody');
     tbody.innerHTML = '';
     
+    const tipeValue = document.getElementById('tipe_pertumbuhan').value;
+    const hideDurasi = (tipeValue === '4'); // Hide durasi column for "Jumlah Kejadian"
+    
     dataPoints.forEach((point, index) => {
         const row = document.createElement('tr');
         row.style.animationDelay = (index * 0.02) + 's';
-        row.innerHTML = `
-            <td>${point.input_size}</td>
-            <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
-            <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
-            <td class="result-cell" title="${point.result}">${point.result}</td>
-        `;
+        
+        if (hideDurasi) {
+            row.innerHTML = `
+                <td>${point.kejadian}</td>
+                <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
+                <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
+                <td class="result-cell" title="${point.result}">${point.result}</td>
+            `;
+        } else {
+            row.innerHTML = `
+                <td>${point.durasi}</td>
+                <td>${point.kejadian}</td>
+                <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
+                <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
+                <td class="result-cell" title="${point.result}">${point.result}</td>
+            `;
+        }
+        
         tbody.appendChild(row);
     });
 }

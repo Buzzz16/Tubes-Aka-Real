@@ -3,7 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Analisis Kompleksitas Algoritma{% endblock %}</title>
+    <title>{% block title %}Analisis Pertumbuhan Bakteri{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Aplikasi analisis perbandingan efisiensi algoritma iteratif dan rekursif dalam perhitungan pertumbuhan bakteri Vibrio natriegens. Tugas Besar Analisis Kompleksitas Algoritma.">
+    <meta name="keywords" content="algoritma, iteratif, rekursif, pertumbuhan bakteri, Vibrio natriegens, analisis kompleksitas, time complexity">
+    <meta name="author" content="Babass - Gathfann">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Analisis Pertumbuhan Bakteri V. natriegens">
+    <meta property="og:description" content="Perbandingan efisiensi algoritma iteratif vs rekursif dalam memprediksi pertumbuhan eksponensial bakteri.">
+    <meta property="og:image" content="{{ url_for('static', filename='logo/favicon.ico', _external=True) }}">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Analisis Pertumbuhan Bakteri V. natriegens">
+    <meta name="twitter:description" content="Perbandingan efisiensi algoritma iteratif vs rekursif.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='logo/favicon.ico') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='logo/favicon.ico') }}">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,14 +45,19 @@
         <div class="gradient-orb orb-1"></div>
         <div class="gradient-orb orb-2"></div>
         <div class="gradient-orb orb-3"></div>
+        <!-- Bacterial particles -->
+        <div class="bacteria-particle particle-1"></div>
+        <div class="bacteria-particle particle-2"></div>
+        <div class="bacteria-particle particle-3"></div>
+        <div class="bacteria-particle particle-4"></div>
     </div>
 
     <!-- Navigation -->
     <nav class="navbar glass-morphism" id="navbar">
         <div class="container nav-container">
             <div class="nav-brand fade-in">
-                <i class="fas fa-chart-line brand-icon"></i>
-                <span class="brand-text">Analisis Algoritma</span>
+                <i class="fas fa-bacterium brand-icon"></i>
+                <span class="brand-text">Pertumbuhan Bakteri <em>V. natriegens</em></span>
             </div>
             
             <button class="nav-toggle" id="navToggle">
@@ -50,14 +75,14 @@
                 </li>
                 <li class="nav-item fade-in" style="animation-delay: 0.2s">
                     <a href="{{ url_for('single_test') }}" class="nav-link {% if request.endpoint == 'single_test' %}active{% endif %}">
-                        <i class="fas fa-bolt"></i>
+                        <i class="fas fa-bacterium"></i>
                         <span>Single Test</span>
                     </a>
                 </li>
                 <li class="nav-item fade-in" style="animation-delay: 0.3s">
                     <a href="{{ url_for('range_test') }}" class="nav-link {% if request.endpoint == 'range_test' %}active{% endif %}">
-                        <i class="fas fa-chart-area"></i>
-                        <span>Range & Graph</span>
+                        <i class="fas fa-vials"></i>
+                        <span>Multiple Test</span>
                     </a>
                 </li>
             </ul>
@@ -75,8 +100,8 @@
     <footer class="footer glass-morphism">
         <div class="container">
             <p class="footer-text">
-                <i class="fas fa-graduation-cap"></i>
-                Tugas Besar Analisis Kompleksitas Algoritma | Babass - Gathfann © 2025
+                <i class="fas fa-microscope"></i>
+                Analisis Pertumbuhan Bakteri <em>Vibrio natriegens</em> | Babass - Gathfann © 2025
             </p>
         </div>
     </footer>

@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify, send_file
-from flask_compress import Compress
 import time
 import sys
 import csv
@@ -10,11 +9,8 @@ from io import StringIO, BytesIO
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-tubesakaanalisisalgoritma2025')
 
-# Aktifkan kompresi untuk aset statis dan respons JSON
-Compress(app)
-
-# Menambah batas rekursi untuk berjaga-jaga input besar
-sys.setrecursionlimit(20000)
+# Menambah batas rekursi (cukup untuk cover batas 5000 di logic)
+sys.setrecursionlimit(6000)
 
 # ============================================================================
 # CORE ALGORITHMS - Pertumbuhan Bakteri Vibrio natriegens

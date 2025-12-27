@@ -8,6 +8,16 @@
     box-sizing: border-box;
 }
 
+/* Ensure icon font uses swap to avoid render delay */
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2") format("woff2"),
+         url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff") format("woff");
+}
+
 :root {
     /* Color Palette - Bacterial Green Theme */
     --primary-dark: #FFFFFF;
@@ -460,6 +470,12 @@ body {
 
 .nav-toggle:hover {
     background: rgba(16, 185, 129, 0.1);
+}
+
+.nav-toggle:focus-visible {
+    outline: 2px solid var(--accent-emerald);
+    outline-offset: 3px;
+    background: rgba(16, 185, 129, 0.08);
 }
 
 .nav-toggle span {

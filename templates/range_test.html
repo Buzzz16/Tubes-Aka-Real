@@ -187,349 +187,353 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <script>
-let trendChart = null;
+document.addEventListener('DOMContentLoaded', () => {
+    let trendChart = null;
+    let latestDataPoints = [];
 
-// Toggle laju_pertumbuhan visibility and durasi column based on tipe_pertumbuhan
-document.getElementById('tipe_pertumbuhan').addEventListener('change', function() {
-    const lajuGroup = document.getElementById('laju_group');
-    const lajuInput = document.getElementById('laju_pertumbuhan');
-    const intervalGroup = document.getElementById('interval_group');
-    const startLabel = document.getElementById('start_label');
-    const endLabel = document.getElementById('end_label');
-    const startHint = document.getElementById('start_hint');
-    const endHint = document.getElementById('end_hint');
-    const durasiHeader = document.getElementById('durasi_header');
-    
-    if (this.value === '4') { // Jumlah Kejadian
-        lajuGroup.style.display = 'none';
-        lajuInput.removeAttribute('required');
-        intervalGroup.classList.remove('span-2');
-        intervalGroup.classList.add('span-4');
-        startLabel.textContent = 'Kejadian Mulai';
-        endLabel.textContent = 'Kejadian Akhir';
-        startHint.textContent = 'Jumlah kejadian awal';
-        endHint.textContent = 'Jumlah kejadian akhir';
-        durasiHeader.style.display = 'none';
-    } else {
-        lajuGroup.style.display = 'block';
-        lajuInput.setAttribute('required', 'required');
-        intervalGroup.classList.remove('span-4');
-        intervalGroup.classList.add('span-2');
-        startLabel.textContent = 'Nilai Mulai Pertumbuhan';
-        endLabel.textContent = 'Nilai Akhir Pertumbuhan';
-        startHint.textContent = 'Nilai awal durasi pertumbuhan';
-        endHint.textContent = 'Nilai akhir durasi pertumbuhan';
-        durasiHeader.style.display = '';
-    }
-});
-
-document.getElementById('rangeTestForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Validate inputs
-    const startValue = parseFloat(document.getElementById('start_value').value);
-    const endValue = parseFloat(document.getElementById('end_value').value);
-    const interval = parseInt(document.getElementById('interval').value);
-    
-    if (startValue >= endValue) {
-        alert('Nilai Akhir harus lebih besar dari Nilai Mulai');
-        return;
-    }
-    
-    if (interval <= 0) {
-        alert('Interval harus lebih besar dari 0');
-        return;
-    }
-    
-    // Calculate estimated data points
-    const laju = parseFloat(document.getElementById('laju_pertumbuhan').value) || 10;
-    const tipe = document.getElementById('tipe_pertumbuhan').value;
-    let estimatedPoints;
-    if (tipe === '4') {
-        estimatedPoints = Math.floor((endValue - startValue) / interval) + 1;
-    } else {
-        const kejadianMulai = Math.floor((startValue * 60) / (laju * 60));
-        const kejadianAkhir = Math.floor((endValue * 60) / (laju * 60));
-        estimatedPoints = Math.floor((kejadianAkhir - kejadianMulai) / interval) + 1;
-    }
-    
-    // Show progress section with info
-    document.getElementById('progressSection').style.display = 'block';
-    document.getElementById('resultsSection').style.display = 'none';
-    document.getElementById('progressInfo').textContent = `Menghitung ${estimatedPoints} data points...`;
-    
-    // Simulate progress (since we can't get real-time updates from Flask easily)
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += 2;
-        if (progress <= 90) {
-            document.getElementById('progressFill').style.width = progress + '%';
-            document.getElementById('progressText').textContent = progress + '%';
-        }
-    }, 100);
-    
-    // Get form data
-    const formData = new FormData(this);
-    
-    try {
-        const response = await fetch('{{ url_for("range_test") }}', {
-            method: 'POST',
-            body: formData
+    // Toggle laju_pertumbuhan visibility and durasi column based on tipe_pertumbuhan
+    const tipePertumbuhan = document.getElementById('tipe_pertumbuhan');
+    if (tipePertumbuhan) {
+        tipePertumbuhan.addEventListener('change', function() {
+            const lajuGroup = document.getElementById('laju_group');
+            const lajuInput = document.getElementById('laju_pertumbuhan');
+            const intervalGroup = document.getElementById('interval_group');
+            const startLabel = document.getElementById('start_label');
+            const endLabel = document.getElementById('end_label');
+            const startHint = document.getElementById('start_hint');
+            const endHint = document.getElementById('end_hint');
+            const durasiHeader = document.getElementById('durasi_header');
+            
+            if (this.value === '4') { // Jumlah Kejadian
+                lajuGroup.style.display = 'none';
+                lajuInput.removeAttribute('required');
+                intervalGroup.classList.remove('span-2');
+                intervalGroup.classList.add('span-4');
+                startLabel.textContent = 'Kejadian Mulai';
+                endLabel.textContent = 'Kejadian Akhir';
+                startHint.textContent = 'Jumlah kejadian awal';
+                endHint.textContent = 'Jumlah kejadian akhir';
+                durasiHeader.style.display = 'none';
+            } else {
+                lajuGroup.style.display = 'block';
+                lajuInput.setAttribute('required', 'required');
+                intervalGroup.classList.remove('span-4');
+                intervalGroup.classList.add('span-2');
+                startLabel.textContent = 'Nilai Mulai Pertumbuhan';
+                endLabel.textContent = 'Nilai Akhir Pertumbuhan';
+                startHint.textContent = 'Nilai awal durasi pertumbuhan';
+                endHint.textContent = 'Nilai akhir durasi pertumbuhan';
+                durasiHeader.style.display = '';
+            }
         });
-        
-        const data = await response.json();
-        
-        // Complete progress
-        clearInterval(progressInterval);
-        document.getElementById('progressFill').style.width = '100%';
-        document.getElementById('progressText').textContent = '100%';
-        
-        setTimeout(() => {
-            document.getElementById('progressSection').style.display = 'none';
-        }, 500);
-        
-        if (data.success) {
-            // Update statistics
-            document.getElementById('avgIterative').textContent = 
-                data.avg_iter.toFixed(6) + ' ms';
-            document.getElementById('avgRecursive').textContent = 
-                data.avg_rec ? data.avg_rec.toFixed(6) + ' ms' : 'N/A';
-            document.getElementById('rangeConclusion').textContent = data.conclusion;
+    }
+
+    const rangeTestForm = document.getElementById('rangeTestForm');
+    if (rangeTestForm) {
+        rangeTestForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            // Store data for CSV export
-            latestDataPoints = data.data_points;
+            // Validate inputs
+            const startValue = parseFloat(document.getElementById('start_value').value);
+            const endValue = parseFloat(document.getElementById('end_value').value);
+            const interval = parseInt(document.getElementById('interval').value);
             
-            // Create chart
-            createTrendChart(data.data_points);
+            if (startValue >= endValue) {
+                alert('Nilai Akhir harus lebih besar dari Nilai Mulai');
+                return;
+            }
             
-            // Populate table
-            populateDataTable(data.data_points);
+            if (interval <= 0) {
+                alert('Interval harus lebih besar dari 0');
+                return;
+            }
             
-            // Show results with animation
-            const resultsSection = document.getElementById('resultsSection');
-            resultsSection.style.display = 'block';
-            setTimeout(() => {
-                resultsSection.querySelectorAll('.slide-up').forEach((el, index) => {
-                    el.style.animationDelay = (index * 0.1) + 's';
-                    el.classList.add('animated');
-                });
+            // Calculate estimated data points
+            const laju = parseFloat(document.getElementById('laju_pertumbuhan').value) || 10;
+            const tipe = document.getElementById('tipe_pertumbuhan').value;
+            let estimatedPoints;
+            if (tipe === '4') {
+                estimatedPoints = Math.floor((endValue - startValue) / interval) + 1;
+            } else {
+                const kejadianMulai = Math.floor((startValue * 60) / (laju * 60));
+                const kejadianAkhir = Math.floor((endValue * 60) / (laju * 60));
+                estimatedPoints = Math.floor((kejadianAkhir - kejadianMulai) / interval) + 1;
+            }
+            
+            // Show progress section with info
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('progressInfo').textContent = `Menghitung ${estimatedPoints} data points...`;
+            
+            // Simulate progress (since we can't get real-time updates from Flask easily)
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 2;
+                if (progress <= 90) {
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    document.getElementById('progressText').textContent = progress + '%';
+                }
             }, 100);
             
-        } else {
-            alert('Error: ' + data.error);
+            // Get form data
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('{{ url_for("range_test") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                // Complete progress
+                clearInterval(progressInterval);
+                document.getElementById('progressFill').style.width = '100%';
+                document.getElementById('progressText').textContent = '100%';
+                
+                setTimeout(() => {
+                    document.getElementById('progressSection').style.display = 'none';
+                }, 500);
+                
+                if (data.success) {
+                    // Update statistics
+                    document.getElementById('avgIterative').textContent = 
+                        data.avg_iter.toFixed(6) + ' ms';
+                    document.getElementById('avgRecursive').textContent = 
+                        data.avg_rec ? data.avg_rec.toFixed(6) + ' ms' : 'N/A';
+                    document.getElementById('rangeConclusion').textContent = data.conclusion;
+                    
+                    // Store data for CSV export
+                    latestDataPoints = data.data_points;
+                    
+                    // Create chart
+                    createTrendChart(data.data_points);
+                    
+                    // Populate table
+                    populateDataTable(data.data_points);
+                    
+                    // Show results with animation
+                    const resultsSection = document.getElementById('resultsSection');
+                    resultsSection.style.display = 'block';
+                    setTimeout(() => {
+                        resultsSection.querySelectorAll('.slide-up').forEach((el, index) => {
+                            el.style.animationDelay = (index * 0.1) + 's';
+                            el.classList.add('animated');
+                        });
+                    }, 100);
+                    
+                } else {
+                    alert('Error: ' + data.error);
+                }
+                
+            } catch (error) {
+                clearInterval(progressInterval);
+                document.getElementById('progressSection').style.display = 'none';
+                alert('Terjadi kesalahan: ' + error.message);
+            }
+        });
+    }
+
+    function createTrendChart(dataPoints) {
+        const ctx = document.getElementById('trendChart');
+        
+        if (!ctx) return;
+        if (trendChart) {
+            trendChart.destroy();
         }
         
-    } catch (error) {
-        clearInterval(progressInterval);
-        document.getElementById('progressSection').style.display = 'none';
-        alert('Terjadi kesalahan: ' + error.message);
-    }
-});
-
-function createTrendChart(dataPoints) {
-    const ctx = document.getElementById('trendChart');
-    
-    if (trendChart) {
-        trendChart.destroy();
-    }
-    
-    const labels = dataPoints.map(d => `${d.durasi} (${d.kejadian}x)`);
-    const iterativeData = dataPoints.map(d => d.time_iter);
-    const recursiveData = dataPoints.map(d => d.time_rec);
-    
-    trendChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Iteratif',
-                    data: iterativeData,
-                    borderColor: 'rgba(34, 197, 94, 1)',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: 'rgba(34, 197, 94, 1)'
-                },
-                {
-                    label: 'Rekursif',
-                    data: recursiveData,
-                    borderColor: 'rgba(139, 92, 246, 1)',
-                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: 'rgba(139, 92, 246, 1)'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            interaction: {
-                mode: 'index',
-                intersect: false
+        const labels = dataPoints.map(d => `${d.durasi} (${d.kejadian}x)`);
+        const iterativeData = dataPoints.map(d => d.time_iter);
+        const recursiveData = dataPoints.map(d => d.time_rec);
+        
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Iteratif',
+                        data: iterativeData,
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: 'rgba(34, 197, 94, 1)'
+                    },
+                    {
+                        label: 'Rekursif',
+                        data: recursiveData,
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: 'rgba(139, 92, 246, 1)'
+                    }
+                ]
             },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        color: '#CBD5E1',
-                        font: {
-                            size: 14,
-                            weight: '600'
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#CBD5E1',
+                            font: {
+                                size: 14,
+                                weight: '600'
+                            },
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        padding: 12,
+                        titleColor: '#1E293B',
+                        bodyColor: '#475569',
+                        borderColor: 'rgba(59, 130, 246, 0.3)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toFixed(6) + ' ms';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)'
                         },
-                        padding: 15,
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    padding: 12,
-                    titleColor: '#1E293B',
-                    bodyColor: '#475569',
-                    borderColor: 'rgba(59, 130, 246, 0.3)',
-                    borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
+                        ticks: {
+                            color: '#94A3B8',
+                            callback: function(value) {
+                                return value.toFixed(2) + ' ms';
                             }
-                            if (context.parsed.y !== null) {
-                                label += context.parsed.y.toFixed(6) + ' ms';
-                            }
-                            return label;
                         }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(148, 163, 184, 0.1)'
                     },
-                    ticks: {
-                        color: '#94A3B8',
-                        callback: function(value) {
-                            return value.toFixed(2) + ' ms';
+                    x: {
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.05)'
+                        },
+                        ticks: {
+                            color: '#94A3B8',
+                            maxRotation: 45,
+                            minRotation: 0
                         }
                     }
                 },
-                x: {
-                    grid: {
-                        color: 'rgba(148, 163, 184, 0.05)'
-                    },
-                    ticks: {
-                        color: '#94A3B8',
-                        maxRotation: 45,
-                        minRotation: 0
-                    }
+                animation: {
+                    duration: 2000,
+                    easing: 'easeInOutQuart'
                 }
-            },
-            animation: {
-                duration: 2000,
-                easing: 'easeInOutQuart'
             }
-        }
-    });
-}
+        });
+    }
 
-function populateDataTable(dataPoints) {
-    const tbody = document.getElementById('dataTableBody');
-    tbody.innerHTML = '';
-    
-    const tipeValue = document.getElementById('tipe_pertumbuhan').value;
-    const hideDurasi = (tipeValue === '4'); // Hide durasi column for "Jumlah Kejadian"
-    
-    dataPoints.forEach((point, index) => {
-        const row = document.createElement('tr');
-        row.style.animationDelay = (index * 0.02) + 's';
+    function populateDataTable(dataPoints) {
+        const tbody = document.getElementById('dataTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        const tipeValue = document.getElementById('tipe_pertumbuhan').value;
+        const hideDurasi = (tipeValue === '4'); // Hide durasi column for "Jumlah Kejadian"
+        
+        dataPoints.forEach((point, index) => {
+            const row = document.createElement('tr');
+            row.style.animationDelay = (index * 0.02) + 's';
+            
+            if (hideDurasi) {
+                row.innerHTML = `
+                    <td>${point.kejadian}</td>
+                    <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
+                    <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
+                    <td class="result-cell" title="${point.result}">${point.result}</td>
+                `;
+            } else {
+                row.innerHTML = `
+                    <td>${point.durasi}</td>
+                    <td>${point.kejadian}</td>
+                    <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
+                    <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
+                    <td class="result-cell" title="${point.result}">${point.result}</td>
+                `;
+            }
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    // Download Chart as PNG
+    window.downloadChart = function(chartId, filename) {
+        const chart = Chart.getChart(chartId);
+        if (!chart) {
+            alert('Chart tidak ditemukan');
+            return;
+        }
+        
+        const link = document.createElement('a');
+        link.download = filename + '_' + new Date().toISOString().slice(0, 10) + '.png';
+        link.href = chart.toBase64Image('image/png', 1.0);
+        link.click();
+    };
+
+    // Export CSV
+    window.exportCSV = function() {
+        if (!latestDataPoints || latestDataPoints.length === 0) {
+            alert('Tidak ada data untuk di-export. Silakan generate analisis terlebih dahulu.');
+            return;
+        }
+        
+        const tipeValue = document.getElementById('tipe_pertumbuhan').value;
+        const hideDurasi = (tipeValue === '4');
+        
+        // Build CSV content
+        let csvContent = '';
         
         if (hideDurasi) {
-            row.innerHTML = `
-                <td>${point.kejadian}</td>
-                <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
-                <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
-                <td class="result-cell" title="${point.result}">${point.result}</td>
-            `;
+            csvContent = 'Kejadian,Iteratif (ms),Rekursif (ms),Populasi Bakteri\n';
+            latestDataPoints.forEach(point => {
+                csvContent += `${point.kejadian},${point.time_iter.toFixed(6)},${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'},"${point.result}"\n`;
+            });
         } else {
-            row.innerHTML = `
-                <td>${point.durasi}</td>
-                <td>${point.kejadian}</td>
-                <td class="time-cell iterative">${point.time_iter.toFixed(6)}</td>
-                <td class="time-cell recursive">${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'}</td>
-                <td class="result-cell" title="${point.result}">${point.result}</td>
-            `;
+            csvContent = 'Durasi,Kejadian,Iteratif (ms),Rekursif (ms),Populasi Bakteri\n';
+            latestDataPoints.forEach(point => {
+                csvContent += `${point.durasi},${point.kejadian},${point.time_iter.toFixed(6)},${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'},"${point.result}"\n`;
+            });
         }
         
-        tbody.appendChild(row);
-    });
-}
-
-// Store latest data for CSV export
-let latestDataPoints = [];
-
-// Download Chart as PNG
-function downloadChart(chartId, filename) {
-    const chart = Chart.getChart(chartId);
-    if (!chart) {
-        alert('Chart tidak ditemukan');
-        return;
-    }
-    
-    // Create a temporary canvas with white background
-    const canvas = chart.canvas;
-    const ctx = canvas.getContext('2d');
-    
-    // Get the chart as base64 image
-    const link = document.createElement('a');
-    link.download = filename + '_' + new Date().toISOString().slice(0, 10) + '.png';
-    link.href = chart.toBase64Image('image/png', 1.0);
-    link.click();
-}
-
-// Export CSV
-function exportCSV() {
-    if (!latestDataPoints || latestDataPoints.length === 0) {
-        alert('Tidak ada data untuk di-export. Silakan generate analisis terlebih dahulu.');
-        return;
-    }
-    
-    const tipeValue = document.getElementById('tipe_pertumbuhan').value;
-    const hideDurasi = (tipeValue === '4');
-    
-    // Build CSV content
-    let csvContent = '';
-    
-    if (hideDurasi) {
-        csvContent = 'Kejadian,Iteratif (ms),Rekursif (ms),Populasi Bakteri\n';
-        latestDataPoints.forEach(point => {
-            csvContent += `${point.kejadian},${point.time_iter.toFixed(6)},${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'},"${point.result}"\n`;
-        });
-    } else {
-        csvContent = 'Durasi,Kejadian,Iteratif (ms),Rekursif (ms),Populasi Bakteri\n';
-        latestDataPoints.forEach(point => {
-            csvContent += `${point.durasi},${point.kejadian},${point.time_iter.toFixed(6)},${point.time_rec ? point.time_rec.toFixed(6) : 'N/A'},"${point.result}"\n`;
-        });
-    }
-    
-    // Create download link
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'bacteria_growth_analysis_' + new Date().toISOString().slice(0, 10) + '.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
-}
+        // Create download link
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'bacteria_growth_analysis_' + new Date().toISOString().slice(0, 10) + '.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    };
+});
 </script>
 {% endblock %}

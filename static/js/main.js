@@ -2,18 +2,18 @@
 // NAVIGATION INTERACTIONS
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // ========================================================================
     // DARK MODE TOGGLE
     // ========================================================================
     const darkModeToggle = document.getElementById('darkModeToggle');
     const darkModeIcon = document.getElementById('darkModeIcon');
-    
+
     // Check for saved preference or system preference
     function initDarkMode() {
         const savedMode = localStorage.getItem('darkMode');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
+
         if (savedMode === 'enabled' || (savedMode === null && prefersDark)) {
             document.body.classList.add('dark-mode');
             updateDarkModeIcon(true);
@@ -21,96 +21,105 @@ document.addEventListener('DOMContentLoaded', function() {
             updateDarkModeIcon(false);
         }
     }
-    
+
     function updateDarkModeIcon(isDark) {
         if (darkModeIcon) {
             darkModeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         }
     }
-    
+
     function toggleDarkMode() {
         const isDark = document.body.classList.toggle('dark-mode');
         localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
         updateDarkModeIcon(isDark);
-        
+
         // Update navbar colors for dark mode
         updateNavbarForDarkMode();
     }
-    
+
     function updateNavbarForDarkMode() {
         const navbar = document.getElementById('navbar');
         const isDark = document.body.classList.contains('dark-mode');
         const currentScroll = window.pageYOffset;
-        
+
         if (isDark) {
-            navbar.style.background = currentScroll > 50 
-                ? 'rgba(15, 23, 42, 0.95)' 
+            navbar.style.background = currentScroll > 50
+                ? 'rgba(15, 23, 42, 0.95)'
                 : 'rgba(15, 23, 42, 0.9)';
         } else {
-            navbar.style.background = currentScroll > 50 
-                ? 'rgba(255, 255, 255, 0.95)' 
+            navbar.style.background = currentScroll > 50
+                ? 'rgba(255, 255, 255, 0.95)'
                 : 'rgba(255, 255, 255, 0.8)';
         }
     }
-    
+
     if (darkModeToggle) {
         darkModeToggle.addEventListener('click', toggleDarkMode);
     }
-    
+
     // Initialize dark mode on load
     initDarkMode();
-    
+
     // ========================================================================
     // MOBILE NAVIGATION TOGGLE
     // ========================================================================
     // Mobile Navigation Toggle
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
-    
+
     if (navToggle && navMenu) {
-        navToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            navToggle.classList.toggle('active');
+        navToggle.setAttribute('aria-label', 'Buka menu navigasi');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.setAttribute('aria-controls', 'navMenu');
+
+        const setNavState = (isOpen) => {
+            navMenu.classList.toggle('active', isOpen);
+            navToggle.classList.toggle('active', isOpen);
+            navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            navToggle.setAttribute('aria-label', isOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi');
+        };
+
+        navToggle.addEventListener('click', function () {
+            const isOpen = navMenu.classList.contains('active');
+            setNavState(!isOpen);
         });
-        
+
         // Close menu when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                navMenu.classList.remove('active');
-                navToggle.classList.remove('active');
+                setNavState(false);
             }
         });
-        
+
         // Close menu when clicking a nav link
         const navLinks = navMenu.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                navMenu.classList.remove('active');
-                navToggle.classList.remove('active');
+            link.addEventListener('click', function () {
+                setNavState(false);
             });
         });
     }
-    
+
     // Navbar scroll effect
     const navbar = document.getElementById('navbar');
     let lastScroll = 0;
-    
-    window.addEventListener('scroll', function() {
+
+    window.addEventListener('scroll', function () {
         const currentScroll = window.pageYOffset;
         const isDark = document.body.classList.contains('dark-mode');
-        
+
         if (currentScroll > 50) {
-            navbar.style.background = isDark 
-                ? 'rgba(15, 23, 42, 0.95)' 
+            navbar.style.background = isDark
+                ? 'rgba(15, 23, 42, 0.95)'
                 : 'rgba(255, 255, 255, 0.95)';
             navbar.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.15)';
         } else {
-            navbar.style.background = isDark 
-                ? 'rgba(15, 23, 42, 0.9)' 
+            navbar.style.background = isDark
+                ? 'rgba(15, 23, 42, 0.9)'
                 : 'rgba(255, 255, 255, 0.8)';
             navbar.style.boxShadow = '0 8px 32px rgba(59, 130, 246, 0.1)';
         }
-        
+
         lastScroll = currentScroll;
     });
 });
@@ -120,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================================================
 
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
+    anchor.addEventListener('click', function (e) {
         e.preventDefault();
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
@@ -141,7 +150,7 @@ const observerOptions = {
     rootMargin: '0px 0px -50px 0px'
 };
 
-const observer = new IntersectionObserver(function(entries) {
+const observer = new IntersectionObserver(function (entries) {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.classList.add('animated');
@@ -162,24 +171,24 @@ document.querySelectorAll('.slide-up, .fade-in').forEach(el => {
 
 document.querySelectorAll('.form-input').forEach(input => {
     // Add floating label effect
-    input.addEventListener('focus', function() {
+    input.addEventListener('focus', function () {
         this.parentElement.classList.add('focused');
     });
-    
-    input.addEventListener('blur', function() {
+
+    input.addEventListener('blur', function () {
         if (!this.value) {
             this.parentElement.classList.remove('focused');
         }
     });
-    
+
     // Add ripple effect on input
-    input.addEventListener('click', function(e) {
+    input.addEventListener('click', function (e) {
         const ripple = document.createElement('span');
         ripple.classList.add('ripple-effect');
         ripple.style.left = e.offsetX + 'px';
         ripple.style.top = e.offsetY + 'px';
         this.appendChild(ripple);
-        
+
         setTimeout(() => ripple.remove(), 600);
     });
 });
@@ -189,11 +198,11 @@ document.querySelectorAll('.form-input').forEach(input => {
 // ============================================================================
 
 document.querySelectorAll('.submit-btn, .cta-btn').forEach(button => {
-    button.addEventListener('mouseenter', function(e) {
+    button.addEventListener('mouseenter', function (e) {
         const rect = this.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
+
         this.style.setProperty('--x', x + 'px');
         this.style.setProperty('--y', y + 'px');
     });
@@ -203,22 +212,40 @@ document.querySelectorAll('.submit-btn, .cta-btn').forEach(button => {
 // GLASSMORPHISM CARD TILT EFFECT
 // ============================================================================
 
+// ============================================================================
+// GLASSMORPHISM CARD TILT EFFECT (OPTIMIZED)
+// ============================================================================
+
 document.querySelectorAll('.glass-card, .metric-card').forEach(card => {
-    card.addEventListener('mousemove', function(e) {
-        const rect = this.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        const rotateX = (y - centerY) / 20;
-        const rotateY = (centerX - x) / 20;
-        
-        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+    let ticking = false;
+    let mouseX = 0;
+    let mouseY = 0;
+
+    card.addEventListener('mousemove', function (e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const rect = this.getBoundingClientRect();
+                const x = mouseX - rect.left;
+                const y = mouseY - rect.top;
+
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                // Reduced rotation intensity for better performance
+                const rotateX = (y - centerY) / 25;
+                const rotateY = (centerX - x) / 25;
+
+                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+                ticking = false;
+            });
+            ticking = true;
+        }
     });
-    
-    card.addEventListener('mouseleave', function() {
+
+    card.addEventListener('mouseleave', function () {
         this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
     });
 });
@@ -231,7 +258,7 @@ function animateCounter(element, target, duration = 1000) {
     const start = 0;
     const increment = target / (duration / 16);
     let current = start;
-    
+
     const timer = setInterval(() => {
         current += increment;
         if (current >= target) {
@@ -249,7 +276,7 @@ function animateCounter(element, target, duration = 1000) {
 let particlesEnabled = false; // Set to true to enable particles
 
 if (particlesEnabled) {
-    document.addEventListener('mousemove', function(e) {
+    document.addEventListener('mousemove', function (e) {
         if (Math.random() > 0.95) { // Only create particles 5% of the time
             const particle = document.createElement('div');
             particle.className = 'particle';
@@ -257,9 +284,9 @@ if (particlesEnabled) {
             particle.style.top = e.pageY + 'px';
             particle.style.width = Math.random() * 5 + 2 + 'px';
             particle.style.height = particle.style.width;
-            
+
             document.body.appendChild(particle);
-            
+
             setTimeout(() => particle.remove(), 1000);
         }
     });
@@ -284,12 +311,12 @@ function showAlert(message, type = 'info') {
         <i class="fas fa-info-circle"></i>
         <span>${message}</span>
     `;
-    
+
     document.querySelector('.main-content .container').insertBefore(
         alert,
         document.querySelector('.main-content .container').firstChild
     );
-    
+
     // Auto remove after 5 seconds
     setTimeout(() => {
         alert.style.animation = 'slideUp 0.5s ease reverse';
@@ -301,11 +328,19 @@ function showAlert(message, type = 'info') {
 // PERFORMANCE MONITORING (Optional - for development)
 // ============================================================================
 
-if (window.performance && window.performance.timing) {
-    window.addEventListener('load', function() {
-        const perfData = window.performance.timing;
-        const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-        console.log('Page Load Time:', pageLoadTime + 'ms');
+if (window.performance) {
+    window.addEventListener('load', function () {
+        // Use modern API if available
+        const prefEntries = performance.getEntriesByType("navigation");
+        if (prefEntries.length > 0) {
+            const p = prefEntries[0];
+            console.log(`Page Load Time: ${p.domContentLoadedEventEnd}ms`);
+        } else if (window.performance.timing) {
+            // Fallback
+            const perfData = window.performance.timing;
+            const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+            console.log('Page Load Time:', pageLoadTime + 'ms');
+        }
     });
 }
 
@@ -324,19 +359,25 @@ if (typeof Chart !== 'undefined') {
 // KEYBOARD SHORTCUTS (Optional Enhancement)
 // ============================================================================
 
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     // Ctrl/Cmd + K: Focus on first input
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         const firstInput = document.querySelector('.form-input');
         if (firstInput) firstInput.focus();
     }
-    
+
     // ESC: Close mobile menu
     if (e.key === 'Escape') {
         const navMenu = document.getElementById('navMenu');
+        const navToggle = document.getElementById('navToggle');
         if (navMenu && navMenu.classList.contains('active')) {
             navMenu.classList.remove('active');
+            if (navToggle) {
+                navToggle.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.setAttribute('aria-label', 'Buka menu navigasi');
+            }
         }
     }
 });
@@ -379,16 +420,16 @@ function copyToClipboard(text) {
 function exportToCSV(tableId, filename = 'data.csv') {
     const table = document.getElementById(tableId);
     if (!table) return;
-    
+
     let csv = [];
     const rows = table.querySelectorAll('tr');
-    
+
     rows.forEach(row => {
         const cols = row.querySelectorAll('td, th');
         const rowData = Array.from(cols).map(col => col.textContent);
         csv.push(rowData.join(','));
     });
-    
+
     const csvContent = csv.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

@@ -173,236 +173,246 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <script>
-let comparisonChart = null;
+document.addEventListener('DOMContentLoaded', () => {
+    let comparisonChart = null;
 
-// Download chart as PNG
-function downloadChart(chartId, filename) {
-    const canvas = document.getElementById(chartId);
-    if (!canvas || !comparisonChart) {
-        alert('Chart belum tersedia. Silakan hitung terlebih dahulu.');
-        return;
-    }
-    const link = document.createElement('a');
-    link.download = filename + '-' + new Date().toISOString().slice(0,10) + '.png';
-    link.href = comparisonChart.toBase64Image();
-    link.click();
-}
+    // Download chart as PNG
+    window.downloadChart = function(chartId, filename) {
+        const canvas = document.getElementById(chartId);
+        if (!canvas || !comparisonChart) {
+            alert('Chart belum tersedia. Silakan hitung terlebih dahulu.');
+            return;
+        }
+        const link = document.createElement('a');
+        link.download = filename + '-' + new Date().toISOString().slice(0,10) + '.png';
+        link.href = comparisonChart.toBase64Image();
+        link.click();
+    };
 
-// Toggle laju_pertumbuhan visibility based on tipe_pertumbuhan
-document.getElementById('tipe_pertumbuhan').addEventListener('change', function() {
-    const lajuGroup = document.getElementById('laju_group');
-    const lajuInput = document.getElementById('laju_pertumbuhan');
-    const durasiLabel = document.getElementById('durasi_label');
-    const durasiHint = document.getElementById('durasi_hint');
-    
-    if (this.value === '4') { // Jumlah Kejadian
-        lajuGroup.style.display = 'none';
-        lajuInput.removeAttribute('required');
-        durasiLabel.textContent = 'Jumlah Kejadian';
-        durasiHint.textContent = 'Jumlah kejadian pembelahan bakteri';
-    } else {
-        lajuGroup.style.display = 'block';
-        lajuInput.setAttribute('required', 'required');
-        durasiLabel.textContent = 'Nilai Durasi';
-        durasiHint.textContent = 'Durasi pertumbuhan sesuai tipe yang dipilih';
-    }
-});
-
-document.getElementById('singleTestForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Show loading
-    document.getElementById('loadingOverlay').classList.add('active');
-    
-    // Hide previous results
-    document.getElementById('resultsSection').style.display = 'none';
-    document.getElementById('warningAlert').style.display = 'none';
-    
-    // Get form data
-    const formData = new FormData(this);
-    
-    try {
-        const response = await fetch('{{ url_for("single_test") }}', {
-            method: 'POST',
-            body: formData
+    // Toggle laju_pertumbuhan visibility based on tipe_pertumbuhan
+    const tipePertumbuhan = document.getElementById('tipe_pertumbuhan');
+    if (tipePertumbuhan) {
+        tipePertumbuhan.addEventListener('change', function() {
+            const lajuGroup = document.getElementById('laju_group');
+            const lajuInput = document.getElementById('laju_pertumbuhan');
+            const durasiLabel = document.getElementById('durasi_label');
+            const durasiHint = document.getElementById('durasi_hint');
+            
+            if (this.value === '4') { // Jumlah Kejadian
+                lajuGroup.style.display = 'none';
+                lajuInput.removeAttribute('required');
+                durasiLabel.textContent = 'Jumlah Kejadian';
+                durasiHint.textContent = 'Jumlah kejadian pembelahan bakteri';
+            } else {
+                lajuGroup.style.display = 'block';
+                lajuInput.setAttribute('required', 'required');
+                durasiLabel.textContent = 'Nilai Durasi';
+                durasiHint.textContent = 'Durasi pertumbuhan sesuai tipe yang dipilih';
+            }
         });
-        
-        const data = await response.json();
-        
-        // Hide loading
-        document.getElementById('loadingOverlay').classList.remove('active');
-        
-        if (data.success) {
-            // Show warning if exists
-            if (data.warning) {
-                document.getElementById('warningAlert').style.display = 'flex';
-                document.getElementById('warningText').textContent = data.warning;
-            }
+    }
+
+    const singleTestForm = document.getElementById('singleTestForm');
+    if (singleTestForm) {
+        singleTestForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            // Show validation status
-            const validationStatus = document.getElementById('validationStatus');
-            if (data.recursion_error) {
-                validationStatus.innerHTML = `
-                    <div class="status-box error-status">
-                        <i class="fas fa-times-circle"></i>
-                        <span>Rekursif mengalami RecursionError! Stack limit terlampaui.</span>
-                    </div>
-                `;
-            } else if (data.valid) {
-                validationStatus.innerHTML = `
-                    <div class="status-box success-status">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Hasil perhitungan kedua algoritma valid dan identik.</span>
-                    </div>
-                `;
-            } else {
-                validationStatus.innerHTML = `
-                    <div class="status-box error-status">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span>Terjadi ketidakcocokan hasil!</span>
-                    </div>
-                `;
-            }
+            // Show loading
+            document.getElementById('loadingOverlay').classList.add('active');
             
-            // Update metrics
-            document.getElementById('recursiveTime').textContent = 
-                data.time_rec ? data.time_rec.toFixed(6) + ' ms' : 'Error';
-            document.getElementById('iterativeTime').textContent = 
-                data.time_iter.toFixed(6) + ' ms';
+            // Hide previous results
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('warningAlert').style.display = 'none';
             
-            // Update input values
-            document.getElementById('inputN0').textContent = data.input_data.n0 + ' bakteri';
-            document.getElementById('inputDurasi').textContent = data.input_data.durasi + ' ' + data.input_data.satuan;
-            document.getElementById('inputLaju').textContent = data.input_data.laju + ' menit';
-            document.getElementById('inputKejadian').textContent = data.input_data.kejadian + ' kali pembelahan';
+            // Get form data
+            const formData = new FormData(this);
             
-            // Display result
-            document.getElementById('resultValue').textContent = data.result_iter + ' bakteri';
-            if (data.result_iter.includes('...')) {
-                document.getElementById('resultInfo').textContent = 
-                    `Nilai terlalu besar untuk ditampilkan, menampilkan 100 karakter pertama`;
-            } else {
-                document.getElementById('resultInfo').textContent = 
-                    `${data.result_iter.length} digit`;
-            }
-            
-            if (data.time_rec) {
-                const delta = data.time_iter - data.time_rec;
-                const deltaEl = document.getElementById('timeDelta');
-                deltaEl.textContent = (delta > 0 ? '+' : '') + delta.toFixed(6) + ' ms';
-                deltaEl.className = 'metric-delta ' + (delta > 0 ? 'positive' : 'negative');
-            }
-            
-            // Update conclusion
-            document.getElementById('conclusionText').textContent = data.conclusion;
-            
-            // Create chart
-            createComparisonChart(data.time_rec || 0, data.time_iter);
-            
-            // Show results with animation
-            const resultsSection = document.getElementById('resultsSection');
-            resultsSection.style.display = 'block';
-            setTimeout(() => {
-                resultsSection.querySelectorAll('.slide-up').forEach((el, index) => {
-                    el.style.animationDelay = (index * 0.1) + 's';
-                    el.classList.add('animated');
+            try {
+                const response = await fetch('{{ url_for("single_test") }}', {
+                    method: 'POST',
+                    body: formData
                 });
-            }, 100);
-            
-        } else {
-            alert('Error: ' + data.error);
+                
+                const data = await response.json();
+                
+                // Hide loading
+                document.getElementById('loadingOverlay').classList.remove('active');
+                
+                if (data.success) {
+                    // Show warning if exists
+                    if (data.warning) {
+                        document.getElementById('warningAlert').style.display = 'flex';
+                        document.getElementById('warningText').textContent = data.warning;
+                    }
+                    
+                    // Show validation status
+                    const validationStatus = document.getElementById('validationStatus');
+                    if (data.recursion_error) {
+                        validationStatus.innerHTML = `
+                            <div class="status-box error-status">
+                                <i class="fas fa-times-circle"></i>
+                                <span>Rekursif mengalami RecursionError! Stack limit terlampaui.</span>
+                            </div>
+                        `;
+                    } else if (data.valid) {
+                        validationStatus.innerHTML = `
+                            <div class="status-box success-status">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Hasil perhitungan kedua algoritma valid dan identik.</span>
+                            </div>
+                        `;
+                    } else {
+                        validationStatus.innerHTML = `
+                            <div class="status-box error-status">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>Terjadi ketidakcocokan hasil!</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Update metrics
+                    document.getElementById('recursiveTime').textContent = 
+                        data.time_rec ? data.time_rec.toFixed(6) + ' ms' : 'Error';
+                    document.getElementById('iterativeTime').textContent = 
+                        data.time_iter.toFixed(6) + ' ms';
+                    
+                    // Update input values
+                    document.getElementById('inputN0').textContent = data.input_data.n0 + ' bakteri';
+                    document.getElementById('inputDurasi').textContent = data.input_data.durasi + ' ' + data.input_data.satuan;
+                    document.getElementById('inputLaju').textContent = data.input_data.laju + ' menit';
+                    document.getElementById('inputKejadian').textContent = data.input_data.kejadian + ' kali pembelahan';
+                    
+                    // Display result
+                    document.getElementById('resultValue').textContent = data.result_iter + ' bakteri';
+                    if (data.result_iter.includes('...')) {
+                        document.getElementById('resultInfo').textContent = 
+                            `Nilai terlalu besar untuk ditampilkan, menampilkan 100 karakter pertama`;
+                    } else {
+                        document.getElementById('resultInfo').textContent = 
+                            `${data.result_iter.length} digit`;
+                    }
+                    
+                    if (data.time_rec) {
+                        const delta = data.time_iter - data.time_rec;
+                        const deltaEl = document.getElementById('timeDelta');
+                        deltaEl.textContent = (delta > 0 ? '+' : '') + delta.toFixed(6) + ' ms';
+                        deltaEl.className = 'metric-delta ' + (delta > 0 ? 'positive' : 'negative');
+                    }
+                    
+                    // Update conclusion
+                    document.getElementById('conclusionText').textContent = data.conclusion;
+                    
+                    // Create chart
+                    createComparisonChart(data.time_rec || 0, data.time_iter);
+                    
+                    // Show results with animation
+                    const resultsSection = document.getElementById('resultsSection');
+                    resultsSection.style.display = 'block';
+                    setTimeout(() => {
+                        resultsSection.querySelectorAll('.slide-up').forEach((el, index) => {
+                            el.style.animationDelay = (index * 0.1) + 's';
+                            el.classList.add('animated');
+                        });
+                    }, 100);
+                    
+                } else {
+                    alert('Error: ' + data.error);
+                }
+                
+            } catch (error) {
+                document.getElementById('loadingOverlay').classList.remove('active');
+                alert('Terjadi kesalahan: ' + error.message);
+            }
+        });
+    }
+
+    function createComparisonChart(timeRec, timeIter) {
+        const ctx = document.getElementById('comparisonChart');
+        
+        if (!ctx) return;
+        if (comparisonChart) {
+            comparisonChart.destroy();
         }
         
-    } catch (error) {
-        document.getElementById('loadingOverlay').classList.remove('active');
-        alert('Terjadi kesalahan: ' + error.message);
-    }
-});
-
-function createComparisonChart(timeRec, timeIter) {
-    const ctx = document.getElementById('comparisonChart');
-    
-    if (comparisonChart) {
-        comparisonChart.destroy();
-    }
-    
-    comparisonChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Rekursif', 'Iteratif'],
-            datasets: [{
-                label: 'Waktu Eksekusi (ms)',
-                data: [timeRec, timeIter],
-                backgroundColor: [
-                    'rgba(139, 92, 246, 0.7)',
-                    'rgba(16, 185, 129, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(139, 92, 246, 1)',
-                    'rgba(16, 185, 129, 1)'
-                ],
-                borderWidth: 2,
-                borderRadius: 10
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    padding: 12,
-                    titleColor: '#1E293B',
-                    bodyColor: '#475569',
-                    borderColor: 'rgba(16, 185, 129, 0.3)',
-                    borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            return context.parsed.y.toFixed(6) + ' ms';
-                        }
-                    }
-                }
+        comparisonChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Rekursif', 'Iteratif'],
+                datasets: [{
+                    label: 'Waktu Eksekusi (ms)',
+                    data: [timeRec, timeIter],
+                    backgroundColor: [
+                        'rgba(139, 92, 246, 0.7)',
+                        'rgba(16, 185, 129, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(139, 92, 246, 1)',
+                        'rgba(16, 185, 129, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 10
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(100, 100, 100, 0.2)'
-                    },
-                    ticks: {
-                        color: '#000000',
-                        font: {
-                            size: 12,
-                            weight: 'bold'
-                        },
-                        callback: function(value) {
-                            return value.toFixed(2) + ' ms';
-                        }
-                    }
-                },
-                x: {
-                    grid: {
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
                         display: false
                     },
-                    ticks: {
-                        color: '#000000',
-                        font: {
-                            size: 15,
-                            weight: 'bold'
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        padding: 12,
+                        titleColor: '#1E293B',
+                        bodyColor: '#475569',
+                        borderColor: 'rgba(16, 185, 129, 0.3)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toFixed(6) + ' ms';
+                            }
                         }
                     }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(100, 100, 100, 0.2)'
+                        },
+                        ticks: {
+                            color: '#000000',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            },
+                            callback: function(value) {
+                                return value.toFixed(2) + ' ms';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#000000',
+                            font: {
+                                size: 15,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1500,
+                    easing: 'easeOutQuart'
                 }
-            },
-            animation: {
-                duration: 1500,
-                easing: 'easeOutQuart'
             }
-        }
-    });
-}
+        });
+    }
+});
 </script>
 {% endblock %}
